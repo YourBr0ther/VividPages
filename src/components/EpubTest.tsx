@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import EpubUploader from './EpubUploader';
-import { EpubService, EpubMetadata } from '../services/epubService';
+import { EpubService, EpubMetadata, Chapter } from '../services/epubService';
 
 const EpubTest: React.FC = () => {
   const [metadata, setMetadata] = useState<EpubMetadata | null>(null);
+  const [chapters, setChapters] = useState<Chapter[]>([]);
   const [error, setError] = useState<string>('');
   const epubService = new EpubService();
 
@@ -11,7 +12,9 @@ const EpubTest: React.FC = () => {
     try {
       await epubService.loadEpub(file);
       const metadata = await epubService.getMetadata();
+      const chapters = await epubService.getChapters();
       setMetadata(metadata);
+      setChapters(chapters);
       setError('');
     } catch (err) {
       console.error('Error processing ePUB:', err);
@@ -20,6 +23,7 @@ const EpubTest: React.FC = () => {
         'An error occurred while processing the ePUB file';
       setError(errorMessage);
       setMetadata(null);
+      setChapters([]);
     }
   };
 
@@ -35,32 +39,72 @@ const EpubTest: React.FC = () => {
       )}
 
       {metadata && (
-        <div className="mt-4 p-4 bg-gray-100 rounded">
-          <h2 className="text-xl font-semibold mb-2">Book Metadata</h2>
-          <dl className="grid grid-cols-2 gap-2">
-            <dt className="font-medium">Title:</dt>
-            <dd>{metadata.title}</dd>
-            
-            <dt className="font-medium">Author:</dt>
-            <dd>{metadata.author}</dd>
-            
-            <dt className="font-medium">Language:</dt>
-            <dd>{metadata.language}</dd>
-            
-            {metadata.publisher && (
-              <>
-                <dt className="font-medium">Publisher:</dt>
-                <dd>{metadata.publisher}</dd>
-              </>
-            )}
-            
-            {metadata.date && (
-              <>
-                <dt className="font-medium">Date:</dt>
-                <dd>{metadata.date}</dd>
-              </>
-            )}
-          </dl>
+        <div className="mt-6">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Book Information</h2>
+              <div className="space-y-4">
+                <div className="border-b pb-4">
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Basic Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Title</p>
+                      <p className="font-medium">{metadata.title}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Author</p>
+                      <p className="font-medium">{metadata.author}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Language</p>
+                      <p className="font-medium">{metadata.language}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="border-b pb-4">
+                  <h3 className="text-lg font-medium text-gray-700 mb-2">Publication Details</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {metadata.publisher && (
+                      <div>
+                        <p className="text-sm text-gray-500">Publisher</p>
+                        <p className="font-medium">{metadata.publisher}</p>
+                      </div>
+                    )}
+                    {metadata.date && (
+                      <div>
+                        <p className="text-sm text-gray-500">Publication Date</p>
+                        <p className="font-medium">{metadata.date}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {chapters.length > 0 && (
+        <div className="mt-6">
+          <div className="bg-white shadow-md rounded-lg overflow-hidden">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold mb-4 text-gray-800">Chapters</h2>
+              <div className="space-y-4">
+                {chapters.map((chapter) => (
+                  <div key={chapter.id} className="border-b pb-4 last:border-b-0">
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">{chapter.title}</h3>
+                    {chapter.sections.map((section) => (
+                      <div key={section.id} className="ml-4 mb-2">
+                        <h4 className="text-md font-medium text-gray-600">{section.title}</h4>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-3">{section.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

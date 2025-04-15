@@ -21,9 +21,9 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 
 ### 1.2 ePUB Parser Implementation (3 days)
 - [x] Implement ePUB file upload and validation
-- [ ] Create ePUB extraction service using epub.js or @gxl/epub-parser
+- [x] Create ePUB extraction service using JSZip
+- [x] Implement metadata extraction (title, author, etc.)
 - [ ] Develop chapter extraction functionality
-- [ ] Implement metadata extraction (title, author, etc.)
 - [ ] Create text content parser for each chapter
 - [ ] Develop a service to identify character descriptions using pattern matching
 - [ ] Add unit tests for parser functionality
@@ -143,7 +143,7 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 ## Dependencies and Critical Path
 
 The following tasks form the critical path for the project:
-1. ePUB Parser Implementation
+1. ePUB parsing and chapter extraction
 2. Image Generation Service Integration
 3. Text-Image Synchronization
 4. Character Recognition and Management
