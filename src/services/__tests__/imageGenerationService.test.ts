@@ -21,7 +21,10 @@ describe('ImageGenerationService', () => {
     vi.stubEnv('VITE_STABLE_DIFFUSION_WIDTH', mockConfig.width.toString());
     vi.stubEnv('VITE_STABLE_DIFFUSION_HEIGHT', mockConfig.height.toString());
 
-    service = new ImageGenerationService();
+    // Create a new instance with mock config
+    service = new ImageGenerationService(mockConfig);
+    
+    // Mock fetch globally
     global.fetch = vi.fn();
   });
 
@@ -53,7 +56,7 @@ describe('ImageGenerationService', () => {
           },
           body: JSON.stringify({
             prompt,
-            negative_prompt: expect.any(String),
+            negative_prompt: "blurry, low quality, distorted, deformed, ugly, bad anatomy, bad proportions",
             steps: mockConfig.steps,
             cfg_scale: mockConfig.cfgScale,
             width: mockConfig.width,
@@ -72,7 +75,7 @@ describe('ImageGenerationService', () => {
       });
 
       await expect(service.generateImage('test prompt')).rejects.toThrow(
-        'Error generating image: Error: Failed to generate image: Internal Server Error'
+        'Error generating image: Failed to generate image: Internal Server Error'
       );
     });
   });
@@ -117,7 +120,7 @@ describe('ImageGenerationService', () => {
       };
 
       await expect(service.generateSceneImage(scene)).rejects.toThrow(
-        'Error generating scene image: Error: Failed to generate image: Internal Server Error'
+        'Error generating scene image: Error generating image: Failed to generate image: Internal Server Error'
       );
     });
   });

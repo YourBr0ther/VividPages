@@ -20,12 +20,13 @@ export class ImageGenerationService {
   private config: Required<ImageGenerationConfig>;
 
   constructor(config: ImageGenerationConfig = {}) {
+    const defaultUrl = 'http://127.0.0.1:7860';
     this.config = {
-      stableDiffusionUrl: config.stableDiffusionUrl || import.meta.env.VITE_STABLE_DIFFUSION_URL,
-      steps: config.steps || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_STEPS),
-      cfgScale: config.cfgScale || parseFloat(import.meta.env.VITE_STABLE_DIFFUSION_CFG_SCALE),
-      width: config.width || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_WIDTH),
-      height: config.height || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_HEIGHT)
+      stableDiffusionUrl: config.stableDiffusionUrl || import.meta.env.VITE_STABLE_DIFFUSION_URL || defaultUrl,
+      steps: config.steps || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_STEPS || '20'),
+      cfgScale: config.cfgScale || parseFloat(import.meta.env.VITE_STABLE_DIFFUSION_CFG_SCALE || '7.5'),
+      width: config.width || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_WIDTH || '512'),
+      height: config.height || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_HEIGHT || '512')
     };
   }
 

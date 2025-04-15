@@ -282,6 +282,7 @@ export class EpubService {
     // Parse spine to get reading order
     const spineItems = doc.getElementsByTagNameNS('*', 'itemref');
     const chapters: Chapter[] = [];
+    let chapterNumber = 1;
 
     for (let i = 0; i < spineItems.length; i++) {
       const itemref = spineItems[i];
@@ -308,16 +309,25 @@ export class EpubService {
           tocItem?.label
         );
 
+        // Only skip if content is completely empty
+        if (!content.trim()) {
+          continue;
+        }
+
+        // Use a combination of available titles and chapter number
+        const chapterTitle = title || tocItem?.label || `Chapter ${chapterNumber}`;
+        
         chapters.push({
           id: idref,
-          title: title || tocItem?.label || `Chapter ${i + 1}`,
+          title: chapterTitle,
           content,
           sections,
           characterDescriptions
         });
+
+        chapterNumber++;
       } catch (error) {
         console.warn(`Failed to parse chapter ${idref}:`, error);
-        // Continue with next chapter instead of failing completely
         continue;
       }
     }
@@ -606,12 +616,46 @@ export class EpubService {
     const isXml = mediaType.includes('xml');
     const isText = mediaType.includes('text');
     
-    // Check for special properties that might indicate non-content
+    // Only filter out navigation and cover files
     const isNav = properties?.includes('nav');
     const isCover = properties?.includes('cover-image');
-    const isMath = properties?.includes('mathml');
-    const isSvg = properties?.includes('svg');
     
-    return (isHtml || isXml || isText) && !isNav && !isCover && !isMath && !isSvg;
+    return (isHtml || isXml || isText) && !isNav && !isCover;
+  }
+
+  private isFrontMatter(content: string, href: string, title: string): boolean {
+    const lowerContent = content.toLowerCase();
+    const lowerHref = href.toLowerCase();
+    const lowerTitle = title.toLowerCase();
+
+    // Reduced set of front matter patterns to avoid over-filtering
+    const frontMatterPatterns = [
+      'copyright page',
+      'table of contents',
+      'title page',
+      'cover page'
+    ];
+
+    // Check URL patterns
+    if (frontMatterPatterns.some(pattern => lowerHref.includes(pattern))) {
+      return true;
+    }
+
+    // Check title patterns
+    if (frontMatterPatterns.some(pattern => lowerTitle.includes(pattern))) {
+      return true;
+    }
+
+    // Only check for exact matches in content
+    if (frontMatterPatterns.some(pattern => lowerContent.includes(pattern))) {
+      return true;
+    }
+
+    // Only filter out very short content that doesn't look like a chapter
+    if (content.trim().length < 200 && !content.toLowerCase().includes('chapter')) {
+      return true;
+    }
+
+    return false;
   }
 } 

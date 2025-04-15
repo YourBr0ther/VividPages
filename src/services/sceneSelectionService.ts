@@ -13,12 +13,13 @@ export class SceneSelectionService {
   private config: Required<SceneSelectionConfig>;
 
   constructor(config: SceneSelectionConfig = {}) {
+    const env = typeof import.meta !== 'undefined' ? import.meta.env : process.env;
     this.config = {
-      openaiApiKey: config.openaiApiKey || import.meta.env.VITE_OPENAI_API_KEY,
-      maxScenesPerChapter: config.maxScenesPerChapter || parseInt(import.meta.env.VITE_MAX_SCENES_PER_CHAPTER),
-      model: config.model || import.meta.env.VITE_OPENAI_MODEL,
-      temperature: config.temperature || parseFloat(import.meta.env.VITE_OPENAI_TEMPERATURE),
-      maxTokens: config.maxTokens || parseInt(import.meta.env.VITE_OPENAI_MAX_TOKENS)
+      openaiApiKey: config.openaiApiKey || env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY,
+      maxScenesPerChapter: config.maxScenesPerChapter || parseInt(env.VITE_MAX_SCENES_PER_CHAPTER || env.MAX_SCENES_PER_CHAPTER || '3'),
+      model: config.model || env.VITE_OPENAI_MODEL || env.OPENAI_MODEL || 'gpt-4',
+      temperature: config.temperature || parseFloat(env.VITE_OPENAI_TEMPERATURE || env.OPENAI_TEMPERATURE || '0.7'),
+      maxTokens: config.maxTokens || parseInt(env.VITE_OPENAI_MAX_TOKENS || env.OPENAI_MAX_TOKENS || '1000')
     };
   }
 

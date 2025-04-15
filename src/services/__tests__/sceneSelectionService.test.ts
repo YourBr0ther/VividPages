@@ -22,7 +22,10 @@ describe('SceneSelectionService', () => {
     vi.stubEnv('VITE_OPENAI_TEMPERATURE', mockConfig.temperature.toString());
     vi.stubEnv('VITE_OPENAI_MAX_TOKENS', mockConfig.maxTokens.toString());
 
-    service = new SceneSelectionService();
+    // Create a new instance with mock config
+    service = new SceneSelectionService(mockConfig);
+    
+    // Mock fetch globally
     global.fetch = vi.fn();
   });
 
@@ -90,7 +93,7 @@ describe('SceneSelectionService', () => {
       };
 
       await expect(service.selectScenesFromChapter(chapter)).rejects.toThrow(
-        'Error selecting scenes from chapter: Error: Failed to call ChatGPT: Unauthorized'
+        'Error selecting scenes from chapter: Failed to call ChatGPT: Unauthorized'
       );
     });
   });

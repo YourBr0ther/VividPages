@@ -154,7 +154,11 @@ describe('EpubService', () => {
         id: 'chapter1',
         title: 'Chapter 1',
         content: expect.stringContaining('This is the first chapter'),
-        sections: [],
+        sections: [{
+          id: 'chapter1_section_0',
+          title: 'Chapter 1',
+          content: expect.stringContaining('This is the first chapter')
+        }],
         characterDescriptions: []
       });
     });

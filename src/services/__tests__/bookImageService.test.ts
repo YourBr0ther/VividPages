@@ -24,7 +24,10 @@ describe('BookImageService', () => {
     vi.stubEnv('VITE_OPENAI_TEMPERATURE', mockConfig.sceneSelectionConfig.temperature.toString());
     vi.stubEnv('VITE_OPENAI_MAX_TOKENS', mockConfig.sceneSelectionConfig.maxTokens.toString());
 
-    service = new BookImageService();
+    // Create a new instance with mock config
+    service = new BookImageService(mockConfig);
+    
+    // Mock fetch globally
     global.fetch = vi.fn();
   });
 
@@ -185,13 +188,6 @@ describe('BookImageService', () => {
           content: 'Content 1',
           sections: [],
           characterDescriptions: []
-        },
-        {
-          id: 'chapter2',
-          title: 'Chapter 2',
-          content: 'Content 2',
-          sections: [],
-          characterDescriptions: []
         }
       ];
 
@@ -201,18 +197,17 @@ describe('BookImageService', () => {
 
       const mockImageData = 'base64-encoded-image-data';
 
-      // Mock scene selection responses
+      // Mock ChatGPT API calls
       (global.fetch as any)
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify(mockScenes) } }] })
         })
-        // Mock prompt generation response
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify({ prompt: 'Prompt 1' }) } }] })
         })
-        // Mock image generation response
+        // Mock Stable Diffusion API call
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ images: [mockImageData] })

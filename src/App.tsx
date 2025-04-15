@@ -1,10 +1,10 @@
 import React from 'react';
-import EpubTest from './components/EpubTest';
+import EpubReader from './components/EpubReader';
 
 function App() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <EpubTest />
+      <EpubReader />
     </div>
   );
 }
