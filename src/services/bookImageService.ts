@@ -6,6 +6,7 @@ export interface BookImageServiceConfig {
   stableDiffusionUrl?: string;
   openaiApiKey?: string;
   maxScenesPerChapter?: number;
+  maxChapters?: number;
   imageGenerationConfig?: {
     steps?: number;
     cfgScale?: number;
@@ -22,8 +23,12 @@ export interface BookImageServiceConfig {
 export class BookImageService {
   private imageGenerationService: ImageGenerationService;
   private sceneSelectionService: SceneSelectionService;
+  private maxChapters: number;
 
   constructor(config: BookImageServiceConfig = {}) {
+    const env = typeof import.meta !== 'undefined' ? import.meta.env : process.env;
+    this.maxChapters = config.maxChapters || parseInt(env.VITE_MAX_CHAPTERS || '3');
+
     this.imageGenerationService = new ImageGenerationService({
       stableDiffusionUrl: config.stableDiffusionUrl,
       ...config.imageGenerationConfig
@@ -62,7 +67,10 @@ export class BookImageService {
     try {
       const chapterScenes = new Map<string, Scene[]>();
 
-      for (const chapter of chapters) {
+      // Process only up to maxChapters
+      const chaptersToProcess = chapters.slice(0, this.maxChapters);
+
+      for (const chapter of chaptersToProcess) {
         const scenes = await this.processChapter(chapter);
         chapterScenes.set(chapter.id, scenes);
       }

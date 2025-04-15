@@ -23,6 +23,17 @@ export class SceneSelectionService {
     };
   }
 
+  private validateJsonResponse(response: string): any {
+    try {
+      // Remove any potential markdown code block syntax
+      const cleanJson = response.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanJson);
+    } catch (error) {
+      console.error('Invalid JSON response:', response);
+      throw new Error('Failed to parse JSON response from ChatGPT');
+    }
+  }
+
   private async callChatGPT(messages: { role: string; content: string }[]): Promise<string> {
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -35,7 +46,8 @@ export class SceneSelectionService {
           model: this.config.model,
           messages,
           temperature: this.config.temperature,
-          max_tokens: this.config.maxTokens
+          max_tokens: this.config.maxTokens,
+          response_format: { type: "json_object" }  // Force JSON response format
         })
       });
 
@@ -56,12 +68,21 @@ export class SceneSelectionService {
 
   async selectScenesFromChapter(chapter: Chapter): Promise<Scene[]> {
     try {
-      const systemPrompt = `You are an expert at analyzing literary text and identifying key scenes that would make compelling visual representations. 
-        For the given chapter text, identify ${this.config.maxScenesPerChapter} most visually significant scenes.
-        For each scene, provide:
-        1. A brief description of the scene
-        2. The paragraph index where this scene occurs
-        Format your response as a JSON array of objects with 'description' and 'paragraphIndex' fields.`;
+      const systemPrompt = `You are an expert at analyzing literary text and identifying key scenes that would make compelling visual representations.
+        Your task is to identify exactly ${this.config.maxScenesPerChapter} most visually significant scenes from the given chapter.
+        You must respond with a JSON object containing a 'scenes' array. Each scene in the array must have:
+        1. 'description': A brief description of the scene (string)
+        2. 'paragraphIndex': The index where this scene occurs (number)
+        
+        Example response format:
+        {
+          "scenes": [
+            {
+              "description": "A moonlit garden with roses in full bloom",
+              "paragraphIndex": 3
+            }
+          ]
+        }`;
 
       const userPrompt = `Chapter Title: ${chapter.title}\n\nChapter Content:\n${chapter.content}`;
 
@@ -70,34 +91,41 @@ export class SceneSelectionService {
         { role: 'user', content: userPrompt }
       ]);
 
-      // Parse the response and create Scene objects
-      const scenes = JSON.parse(response).map((scene: any) => ({
-        description: scene.description,
+      // Parse and validate the response
+      const parsedResponse = this.validateJsonResponse(response);
+      if (!parsedResponse.scenes || !Array.isArray(parsedResponse.scenes)) {
+        throw new Error('Invalid response format: missing scenes array');
+      }
+
+      // Create Scene objects
+      const scenes = parsedResponse.scenes.map((scene: any) => ({
+        description: scene.description || 'No description provided',
         prompt: '', // This will be filled by the prompt generation service
         chapterId: chapter.id,
-        paragraphIndex: scene.paragraphIndex
+        paragraphIndex: typeof scene.paragraphIndex === 'number' ? scene.paragraphIndex : 0
       }));
 
       return scenes;
     } catch (error) {
       console.error('Error selecting scenes from chapter:', error);
-      if (error instanceof Error) {
-        throw new Error(`Error selecting scenes from chapter: ${error.message}`);
-      }
-      throw new Error(`Error selecting scenes from chapter: ${String(error)}`);
+      throw new Error(`Error selecting scenes from chapter: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
   async generatePromptForScene(scene: Scene, chapter: Chapter): Promise<Scene> {
     try {
       const systemPrompt = `You are an expert at creating detailed, visually rich prompts for image generation.
-        Create a detailed prompt for Stable Diffusion that will generate an image matching the scene description.
-        The prompt should be specific about:
+        Your task is to create a detailed prompt for Stable Diffusion that will generate an image matching the scene description.
+        You must respond with a JSON object containing a 'prompt' field that specifies:
         - Visual style (e.g., "digital art", "oil painting", "photorealistic")
         - Lighting and atmosphere
         - Key visual elements
         - Composition and framing
-        Format your response as a JSON object with a 'prompt' field.`;
+        
+        Example response format:
+        {
+          "prompt": "A serene moonlit garden, digital art style, dramatic lighting with soft blue moonlight casting long shadows, roses in full bloom with dewdrops, wide shot composition with garden path leading to a distant gazebo"
+        }`;
 
       const userPrompt = `Scene Description: ${scene.description}\n\nContext from Chapter: ${chapter.content}`;
 
@@ -106,10 +134,15 @@ export class SceneSelectionService {
         { role: 'user', content: userPrompt }
       ]);
 
-      const { prompt } = JSON.parse(response);
+      // Parse and validate the response
+      const parsedResponse = this.validateJsonResponse(response);
+      if (!parsedResponse.prompt || typeof parsedResponse.prompt !== 'string') {
+        throw new Error('Invalid response format: missing prompt field');
+      }
+
       return {
         ...scene,
-        prompt
+        prompt: parsedResponse.prompt
       };
     } catch (error) {
       console.error('Error generating prompt for scene:', error);

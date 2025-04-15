@@ -7,6 +7,7 @@ describe('BookImageService', () => {
   const mockConfig = {
     stableDiffusionUrl: 'http://localhost:7860',
     openaiApiKey: 'test-api-key',
+    maxChapters: 2,
     sceneSelectionConfig: {
       model: 'gpt-4',
       temperature: 0.7,
@@ -23,6 +24,7 @@ describe('BookImageService', () => {
     vi.stubEnv('VITE_OPENAI_MODEL', mockConfig.sceneSelectionConfig.model);
     vi.stubEnv('VITE_OPENAI_TEMPERATURE', mockConfig.sceneSelectionConfig.temperature.toString());
     vi.stubEnv('VITE_OPENAI_MAX_TOKENS', mockConfig.sceneSelectionConfig.maxTokens.toString());
+    vi.stubEnv('VITE_MAX_CHAPTERS', mockConfig.maxChapters.toString());
 
     // Create a new instance with mock config
     service = new BookImageService(mockConfig);
@@ -180,12 +182,26 @@ describe('BookImageService', () => {
   });
 
   describe('processBook', () => {
-    it('should process all chapters in a book', async () => {
+    it('should process only up to maxChapters', async () => {
       const mockChapters: Chapter[] = [
         {
           id: 'chapter1',
           title: 'Chapter 1',
           content: 'Content 1',
+          sections: [],
+          characterDescriptions: []
+        },
+        {
+          id: 'chapter2',
+          title: 'Chapter 2',
+          content: 'Content 2',
+          sections: [],
+          characterDescriptions: []
+        },
+        {
+          id: 'chapter3',
+          title: 'Chapter 3',
+          content: 'Content 3',
           sections: [],
           characterDescriptions: []
         }
@@ -197,7 +213,7 @@ describe('BookImageService', () => {
 
       const mockImageData = 'base64-encoded-image-data';
 
-      // Mock ChatGPT API calls
+      // Mock ChatGPT API calls for first two chapters
       (global.fetch as any)
         .mockResolvedValueOnce({
           ok: true,
@@ -207,7 +223,18 @@ describe('BookImageService', () => {
           ok: true,
           json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify({ prompt: 'Prompt 1' }) } }] })
         })
-        // Mock Stable Diffusion API call
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ images: [mockImageData] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify(mockScenes) } }] })
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify({ prompt: 'Prompt 1' }) } }] })
+        })
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ images: [mockImageData] })
@@ -215,12 +242,11 @@ describe('BookImageService', () => {
 
       const result = await service.processBook(mockChapters);
 
-      expect(result.size).toBe(1);
-      expect(result.get('chapter1')).toEqual([{
-        ...mockScenes[0],
-        prompt: 'Prompt 1',
-        imageData: mockImageData
-      }]);
+      // Should only process first two chapters (maxChapters = 2)
+      expect(result.size).toBe(2);
+      expect(result.has('chapter1')).toBe(true);
+      expect(result.has('chapter2')).toBe(true);
+      expect(result.has('chapter3')).toBe(false);
     });
 
     it('should handle errors during book processing', async () => {

@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import EpubUploader from './EpubUploader';
+import GenerateScenesButton from './GenerateScenesButton';
 import { EpubService, EpubMetadata, Chapter } from '../services/epubService';
+import { Scene } from '../services/imageGenerationService';
 
 const EpubReader: React.FC = () => {
   const [metadata, setMetadata] = useState<EpubMetadata | null>(null);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [error, setError] = useState<string>('');
   const [currentChapterIndex, setCurrentChapterIndex] = useState<number>(0);
+  const [currentChapterScenes, setCurrentChapterScenes] = useState<Scene[]>([]);
   const epubService = new EpubService();
 
   const handleFileUpload = async (file: File) => {
@@ -18,25 +21,33 @@ const EpubReader: React.FC = () => {
       setChapters(chapters);
       setError('');
       setCurrentChapterIndex(0);
+      setCurrentChapterScenes([]);
     } catch (err) {
       console.error('Error processing ePUB:', err);
       const errorMessage = err instanceof Error ? err.message : 'An error occurred while processing the ePUB file';
       setError(errorMessage);
       setMetadata(null);
       setChapters([]);
+      setCurrentChapterScenes([]);
     }
   };
 
   const handlePreviousChapter = () => {
     if (currentChapterIndex > 0) {
       setCurrentChapterIndex(currentChapterIndex - 1);
+      setCurrentChapterScenes([]);
     }
   };
 
   const handleNextChapter = () => {
     if (currentChapterIndex < chapters.length - 1) {
       setCurrentChapterIndex(currentChapterIndex + 1);
+      setCurrentChapterScenes([]);
     }
+  };
+
+  const handleScenesGenerated = (scenes: Scene[]) => {
+    setCurrentChapterScenes(scenes);
   };
 
   return (
@@ -115,7 +126,7 @@ const EpubReader: React.FC = () => {
               </div>
             </div>
             
-            <div className="prose max-w-none">
+            <div className="mb-6">
               {chapters[currentChapterIndex].sections.map((section) => (
                 <div key={section.id} className="mb-6">
                   <h3 className="text-lg font-medium text-gray-700 mb-2">{section.title}</h3>
@@ -123,6 +134,34 @@ const EpubReader: React.FC = () => {
                 </div>
               ))}
             </div>
+
+            <div className="mt-8">
+              <GenerateScenesButton 
+                chapter={chapters[currentChapterIndex]} 
+                onScenesGenerated={handleScenesGenerated} 
+              />
+            </div>
+
+            {currentChapterScenes.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-lg font-medium text-gray-700 mb-4">Generated Scenes</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {currentChapterScenes.map((scene, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <h4 className="font-medium text-gray-800 mb-2">Scene {index + 1}</h4>
+                      <p className="text-sm text-gray-600 mb-4">{scene.description}</p>
+                      {scene.imageData && (
+                        <img 
+                          src={`data:image/png;base64,${scene.imageData}`} 
+                          alt={`Scene ${index + 1}`}
+                          className="w-full rounded-lg"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
