@@ -1,12 +1,12 @@
-import './styles/App.css'
+import React from 'react';
+import EpubTest from './components/EpubTest';
 
 function App() {
   return (
-    <div className="app">
-      <h1>VividPages</h1>
-      <p>Enhanced eBook Reader with AI-Generated Imagery</p>
+    <div className="min-h-screen bg-gray-50">
+      <EpubTest />
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

@@ -5,22 +5,22 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 ## Phase 1: Project Setup and Core Components
 
 ### 1.1 Project Initialization (1 day)
-- [ ] Create Vite React application with TypeScript
-- [ ] Set up folder structure (components, services, utils)
-- [ ] Install essential dependencies:
+- [x] Create Vite React application with TypeScript
+- [x] Set up folder structure (components, services, utils)
+- [x] Install essential dependencies:
   - React Router for navigation
   - Tailwind CSS for styling
   - Vitest for testing
   - ESLint and Prettier for code quality
-- [ ] Configure Vite development environment
-- [ ] Set up ESLint and Prettier
-- [ ] Configure testing with Vitest
-- [ ] Set up path aliases for cleaner imports
-- [ ] Configure build system and development environment
-- [ ] Set up linting and testing frameworks
+- [x] Configure Vite development environment
+- [x] Set up ESLint and Prettier
+- [x] Configure testing with Vitest
+- [x] Set up path aliases for cleaner imports
+- [x] Configure build system and development environment
+- [x] Set up linting and testing frameworks
 
 ### 1.2 ePUB Parser Implementation (3 days)
-- [ ] Implement ePUB file upload and validation
+- [x] Implement ePUB file upload and validation
 - [ ] Create ePUB extraction service using epub.js or @gxl/epub-parser
 - [ ] Develop chapter extraction functionality
 - [ ] Implement metadata extraction (title, author, etc.)
