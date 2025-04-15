@@ -5,9 +5,17 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 ## Phase 1: Project Setup and Core Components
 
 ### 1.1 Project Initialization (1 day)
-- [ ] Create React application with TypeScript
+- [ ] Create Vite React application with TypeScript
 - [ ] Set up folder structure (components, services, utils)
-- [ ] Install essential dependencies
+- [ ] Install essential dependencies:
+  - React Router for navigation
+  - Tailwind CSS for styling
+  - Vitest for testing
+  - ESLint and Prettier for code quality
+- [ ] Configure Vite development environment
+- [ ] Set up ESLint and Prettier
+- [ ] Configure testing with Vitest
+- [ ] Set up path aliases for cleaner imports
 - [ ] Configure build system and development environment
 - [ ] Set up linting and testing frameworks
 

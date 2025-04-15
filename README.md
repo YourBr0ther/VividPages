@@ -26,7 +26,7 @@ VividPages is an innovative eBook reader that brings stories to life by combinin
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
+- Node.js (v16 or higher)
 - npm or yarn
 
 ### Installation
@@ -46,9 +46,23 @@ yarn install
 
 3. Start the development server:
 ```bash
-npm start
+npm run dev
 # or
-yarn start
+yarn dev
+```
+
+4. Build for production:
+```bash
+npm run build
+# or
+yarn build
+```
+
+5. Preview production build:
+```bash
+npm run preview
+# or
+yarn preview
 ```
 
 ## Project Structure
@@ -59,6 +73,8 @@ yarn start
   - `utils/` - Helper functions and utilities
   - `styles/` - CSS and styling
   - `assets/` - Static assets
+  - `types/` - TypeScript type definitions
+  - `tests/` - Test files
 
 ## Documentation
 
