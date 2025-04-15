@@ -44,14 +44,18 @@ export class EpubService {
   private toc: TocItem[] = [];
 
   async loadEpub(file: File): Promise<void> {
-    this.zip = await JSZip.loadAsync(file);
-    
-    // Get and store OPF path on load for reuse
-    const container = await this.zip.file('META-INF/container.xml')?.async('text');
-    if (!container) {
-      throw new Error('Invalid ePUB file: container.xml not found');
+    try {
+      this.zip = await JSZip.loadAsync(file);
+      
+      // Get and store OPF path on load for reuse
+      const container = await this.zip.file('META-INF/container.xml')?.async('text');
+      if (!container) {
+        throw new Error('Invalid ePUB file: container.xml not found');
+      }
+      this.opfPath = this.extractOpfPath(container);
+    } catch (error) {
+      throw new Error('Invalid ePUB file');
     }
-    this.opfPath = this.extractOpfPath(container);
   }
 
   async getMetadata(): Promise<EpubMetadata> {
@@ -123,20 +127,6 @@ export class EpubService {
     const parser = new DOMParser();
     const doc = parser.parseFromString(opfContent, 'application/xml');
 
-    // Try to find NCX file first (ePUB 2.0)
-    const ncxId = doc.querySelector('spine')?.getAttribute('toc');
-    if (ncxId) {
-      const ncxHref = doc.querySelector(`manifest item[id="${ncxId}"]`)?.getAttribute('href');
-      if (ncxHref) {
-        const ncxPath = this.resolveChapterPath(ncxHref);
-        const ncxContent = await this.zip.file(ncxPath)?.async('text');
-        if (ncxContent) {
-          this.toc = this.parseNcxToc(ncxContent);
-          return this.toc;
-        }
-      }
-    }
-
     // Try to find navigation document (ePUB 3.0)
     const navItem = doc.querySelector('manifest item[properties~="nav"]');
     if (navItem) {
@@ -146,6 +136,20 @@ export class EpubService {
         const navContent = await this.zip.file(navPath)?.async('text');
         if (navContent) {
           this.toc = this.parseNavToc(navContent);
+          return this.toc;
+        }
+      }
+    }
+
+    // Try to find NCX file (ePUB 2.0)
+    const ncxId = doc.querySelector('spine')?.getAttribute('toc');
+    if (ncxId) {
+      const ncxHref = doc.querySelector(`manifest item[id="${ncxId}"]`)?.getAttribute('href');
+      if (ncxHref) {
+        const ncxPath = this.resolveChapterPath(ncxHref);
+        const ncxContent = await this.zip.file(ncxPath)?.async('text');
+        if (ncxContent) {
+          this.toc = this.parseNcxToc(ncxContent);
           return this.toc;
         }
       }
@@ -187,20 +191,19 @@ export class EpubService {
   private parseNavToc(navContent: string): TocItem[] {
     const parser = new DOMParser();
     const doc = parser.parseFromString(navContent, 'text/html');
-    const nav = doc.querySelector('nav[epub\\:type="toc"], nav[*|type="toc"]');
+    const nav = doc.querySelector('nav[epub\\:type="toc"], nav[*|type="toc"], nav[type="toc"]');
     if (!nav) return [];
 
     const parseList = (list: Element, level = 0): TocItem[] => {
       const items: TocItem[] = [];
-      const listItems = list.children;
+      const listItems = list.querySelectorAll('li');
 
-      for (let i = 0; i < listItems.length; i++) {
-        const item = listItems[i];
+      listItems.forEach((item, index) => {
         const link = item.querySelector('a');
-        if (!link) continue;
+        if (!link) return;
 
-        const id = link.getAttribute('id') || `nav_${level}_${i}`;
-        const label = link.textContent || '';
+        const id = link.getAttribute('id') || `nav_${level}_${index}`;
+        const label = link.textContent?.trim() || '';
         const href = link.getAttribute('href') || '';
         const children: TocItem[] = [];
 
@@ -210,7 +213,7 @@ export class EpubService {
         }
 
         items.push({ id, label, href, level, children });
-      }
+      });
 
       return items;
     };

@@ -24,9 +24,8 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 - [x] Create ePUB extraction service using JSZip
 - [x] Implement metadata extraction (title, author, etc.)
 - [x] Develop chapter extraction functionality
-- [ ] Create text content parser for each chapter
-- [ ] Develop a service to identify character descriptions using pattern matching
-- [ ] Add unit tests for parser functionality
+- [x] Create text content parser for each chapter
+- [x] Add unit tests for parser functionality
 
 ### 1.3 Image Generation Service Integration (4 days)
 - [ ] Research and select appropriate Flux AI model endpoints (fal.ai)
@@ -64,7 +63,7 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 - [ ] Implement accessibility features (keyboard navigation, ARIA)
 
 ### 2.3 Character Recognition and Management (5 days)
-- [ ] Implement NLP or pattern matching for character descriptions
+- [ ] Develop a service to identify character descriptions using pattern matching
 - [ ] Create character tracking and storage mechanism
 - [ ] Develop character visualization consistency across chapters
 - [ ] Implement manual character description tagging (fallback)
