@@ -258,15 +258,21 @@ export class EpubService {
     const doc = parser.parseFromString(opfContent, 'application/xml');
 
     // Parse manifest to get all content files
-    const manifest: { [id: string]: string } = {};
+    const manifest: { [id: string]: { href: string; mediaType: string; properties?: string } } = {};
     const manifestItems = doc.getElementsByTagNameNS('*', 'item');
     for (let i = 0; i < manifestItems.length; i++) {
       const item = manifestItems[i];
       const id = item.getAttribute('id');
       const href = item.getAttribute('href');
       const mediaType = item.getAttribute('media-type');
-      if (id && href && mediaType?.includes('xhtml')) {
-        manifest[id] = href;
+      const properties = item.getAttribute('properties');
+      
+      if (id && href) {
+        manifest[id] = {
+          href,
+          mediaType: mediaType || '',
+          properties: properties || undefined
+        };
       }
     }
 
@@ -279,23 +285,38 @@ export class EpubService {
       const idref = itemref.getAttribute('idref');
       if (!idref || !manifest[idref]) continue;
 
-      const chapterPath = this.resolveChapterPath(manifest[idref]);
+      const { href, mediaType, properties } = manifest[idref];
+      
+      // Skip non-content items
+      if (!this.isContentFile(mediaType, properties)) continue;
+
+      const chapterPath = this.resolveChapterPath(href);
       const chapterContent = await this.zip.file(chapterPath)?.async('text');
       if (!chapterContent) continue;
 
       // Find corresponding TOC item for better title
       const tocItem = this.findTocItemById(idref);
 
-      // Parse chapter content
-      const { title, content, sections, characterDescriptions } = this.parseChapterContent(chapterContent, idref, tocItem?.label);
+      try {
+        // Parse chapter content
+        const { title, content, sections, characterDescriptions } = this.parseChapterContent(
+          chapterContent,
+          idref,
+          tocItem?.label
+        );
 
-      chapters.push({
-        id: idref,
-        title: title || tocItem?.label || `Chapter ${i + 1}`,
-        content,
-        sections,
-        characterDescriptions
-      });
+        chapters.push({
+          id: idref,
+          title: title || tocItem?.label || `Chapter ${i + 1}`,
+          content,
+          sections,
+          characterDescriptions
+        });
+      } catch (error) {
+        console.warn(`Failed to parse chapter ${idref}:`, error);
+        // Continue with next chapter instead of failing completely
+        continue;
+      }
     }
 
     return chapters;
@@ -334,21 +355,56 @@ export class EpubService {
       doc.querySelector('title')?.textContent ||
       null;
     
-    // Parse sections
+    // Parse sections with improved text content handling
     const sections: { id: string; title: string; content: string }[] = [];
-    const sectionElements = doc.querySelectorAll('section, div[class*="section"], div[class*="chapter"]');
     
-    sectionElements.forEach((section, index) => {
-      const sectionTitle = section.querySelector('h1, h2, h3, h4, h5, h6')?.textContent || `Section ${index + 1}`;
-      const sectionContent = this.cleanHtmlContent(section.innerHTML);
-      sections.push({
-        id: `${chapterId}_section_${index}`,
-        title: sectionTitle,
-        content: sectionContent
+    // First, try to find explicit sections
+    const sectionElements = doc.querySelectorAll(`
+      section,
+      div[class*="section"],
+      div[class*="chapter"],
+      div[class*="content"],
+      div[class*="text"],
+      article,
+      .chapter,
+      .section,
+      .content
+    `);
+    
+    if (sectionElements.length > 0) {
+      sectionElements.forEach((section, index) => {
+        const sectionTitle = section.querySelector('h1, h2, h3, h4, h5, h6')?.textContent || `Section ${index + 1}`;
+        const sectionContent = this.cleanHtmlContent(section.innerHTML);
+        sections.push({
+          id: `${chapterId}_section_${index}`,
+          title: sectionTitle,
+          content: sectionContent
+        });
       });
-    });
+    } else {
+      // If no explicit sections, try to create sections based on headings
+      const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+      if (headings.length > 0) {
+        headings.forEach((heading, index) => {
+          let content = '';
+          let nextElement = heading.nextElementSibling;
+          
+          // Collect content until next heading
+          while (nextElement && !nextElement.matches('h1, h2, h3, h4, h5, h6')) {
+            content += nextElement.outerHTML;
+            nextElement = nextElement.nextElementSibling;
+          }
+          
+          sections.push({
+            id: `${chapterId}_section_${index}`,
+            title: heading.textContent || `Section ${index + 1}`,
+            content: this.cleanHtmlContent(content)
+          });
+        });
+      }
+    }
 
-    // If no sections found, treat the whole chapter as one section
+    // If still no sections found, treat the whole chapter as one section
     if (sections.length === 0 && doc.body) {
       sections.push({
         id: `${chapterId}_section_0`,
@@ -357,7 +413,7 @@ export class EpubService {
       });
     }
 
-    // Clean full content
+    // Clean and normalize the full content
     const content = this.cleanHtmlContent(doc.body.innerHTML);
     
     // Extract character descriptions
@@ -367,28 +423,115 @@ export class EpubService {
   }
 
   private cleanHtmlContent(html: string): string {
-    // Remove script tags and their content
-    html = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-    
-    // Remove style tags and their content
-    html = html.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-    
-    // Remove comments
-    html = html.replace(/<!--[\s\S]*?-->/g, '');
-    
-    // Remove empty paragraphs
-    html = html.replace(/<p>\s*<\/p>/g, '');
-    
-    // Remove multiple spaces
-    html = html.replace(/\s+/g, ' ');
-    
-    // Clean up common formatting issues
-    html = html
-      .replace(/([.!?])\s+([A-Z])/g, '$1\n$2') // Add newlines after sentences
-      .replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '</p><p>') // Convert double breaks to paragraphs
-      .replace(/\n{3,}/g, '\n\n'); // Normalize multiple newlines
-    
-    return html.trim();
+    // Create a temporary div to parse and clean the HTML
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+
+    // Remove unwanted elements
+    const elementsToRemove = tempDiv.querySelectorAll(`
+      script,
+      style,
+      noscript,
+      iframe,
+      object,
+      embed,
+      audio,
+      video,
+      canvas,
+      svg,
+      img,
+      figure,
+      figcaption,
+      nav,
+      header,
+      footer,
+      aside,
+      form,
+      input,
+      button,
+      select,
+      textarea,
+      label,
+      fieldset,
+      legend,
+      table,
+      thead,
+      tbody,
+      tfoot,
+      tr,
+      th,
+      td,
+      caption,
+      colgroup,
+      col,
+      [role="navigation"],
+      [role="banner"],
+      [role="contentinfo"],
+      [role="complementary"],
+      [role="search"],
+      [role="form"],
+      [role="dialog"],
+      [role="alert"],
+      [role="status"],
+      [role="tooltip"],
+      [role="toolbar"],
+      [role="menu"],
+      [role="menubar"],
+      [role="tablist"],
+      [role="tabpanel"],
+      [role="tree"],
+      [role="treeitem"]
+    `);
+    elementsToRemove.forEach(el => el.remove());
+
+    // Clean up text nodes
+    const walker = document.createTreeWalker(
+      tempDiv,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          // Skip empty or whitespace-only text nodes
+          if (!node.textContent?.trim()) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      }
+    );
+
+    const textNodes: Text[] = [];
+    let node: Text | null;
+    while (node = walker.nextNode() as Text) {
+      textNodes.push(node);
+    }
+
+    // Normalize text content
+    textNodes.forEach(node => {
+      node.textContent = node.textContent
+        ?.replace(/\s+/g, ' ') // Replace multiple spaces with single space
+        .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+        .trim() || '';
+    });
+
+    // Clean up block elements
+    const blockElements = tempDiv.querySelectorAll('p, div, section, article, main, blockquote');
+    blockElements.forEach(el => {
+      // Ensure proper spacing between block elements
+      if (el.nextElementSibling) {
+        el.after('\n\n');
+      }
+    });
+
+    // Get the cleaned HTML
+    let cleanedHtml = tempDiv.innerHTML
+      .replace(/<br\s*\/?>\s*<br\s*\/?>/gi, '\n\n') // Convert double line breaks to paragraphs
+      .replace(/<br\s*\/?>/gi, ' ') // Convert single line breaks to spaces
+      .replace(/<\/p>\s*<p>/gi, '\n\n') // Ensure proper paragraph spacing
+      .replace(/<[^>]+>/g, '') // Remove remaining HTML tags
+      .replace(/\n{3,}/g, '\n\n') // Normalize multiple newlines
+      .trim();
+
+    return cleanedHtml;
   }
 
   private extractCharacterDescriptions(text: string, chapterId: string): CharacterDescription[] {
@@ -452,5 +595,20 @@ export class EpubService {
     const opfDir = this.opfPath.substring(0, this.opfPath.lastIndexOf('/'));
     // Resolve the chapter path relative to the OPF directory
     return opfDir ? `${opfDir}/${href}` : href;
+  }
+
+  private isContentFile(mediaType: string, properties?: string): boolean {
+    // Check for various content types
+    const isHtml = mediaType.includes('html') || mediaType.includes('xhtml');
+    const isXml = mediaType.includes('xml');
+    const isText = mediaType.includes('text');
+    
+    // Check for special properties that might indicate non-content
+    const isNav = properties?.includes('nav');
+    const isCover = properties?.includes('cover-image');
+    const isMath = properties?.includes('mathml');
+    const isSvg = properties?.includes('svg');
+    
+    return (isHtml || isXml || isText) && !isNav && !isCover && !isMath && !isSvg;
   }
 } 

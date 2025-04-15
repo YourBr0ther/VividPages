@@ -23,7 +23,7 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 - [x] Implement ePUB file upload and validation
 - [x] Create ePUB extraction service using JSZip
 - [x] Implement metadata extraction (title, author, etc.)
-- [ ] Develop chapter extraction functionality
+- [x] Develop chapter extraction functionality
 - [ ] Create text content parser for each chapter
 - [ ] Develop a service to identify character descriptions using pattern matching
 - [ ] Add unit tests for parser functionality
