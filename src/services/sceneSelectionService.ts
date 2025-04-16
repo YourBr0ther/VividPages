@@ -15,12 +15,16 @@ export class SceneSelectionService {
   constructor(config: SceneSelectionConfig = {}) {
     const env = typeof import.meta !== 'undefined' ? import.meta.env : process.env;
     this.config = {
-      openaiApiKey: config.openaiApiKey || env.VITE_OPENAI_API_KEY || env.OPENAI_API_KEY,
-      maxScenesPerChapter: config.maxScenesPerChapter || parseInt(env.VITE_MAX_SCENES_PER_CHAPTER || env.MAX_SCENES_PER_CHAPTER || '3'),
-      model: config.model || env.VITE_OPENAI_MODEL || env.OPENAI_MODEL || 'gpt-4',
-      temperature: config.temperature || parseFloat(env.VITE_OPENAI_TEMPERATURE || env.OPENAI_TEMPERATURE || '0.7'),
-      maxTokens: config.maxTokens || parseInt(env.VITE_OPENAI_MAX_TOKENS || env.OPENAI_MAX_TOKENS || '1000')
+      openaiApiKey: config.openaiApiKey || env.VITE_OPENAI_API_KEY || '',
+      maxScenesPerChapter: config.maxScenesPerChapter || parseInt(env.VITE_MAX_SCENES_PER_CHAPTER || '5'),
+      model: config.model || 'gpt-3.5-turbo',
+      temperature: config.temperature || 0.7,
+      maxTokens: config.maxTokens || 1000
     };
+
+    if (!this.config.openaiApiKey) {
+      console.warn('No OpenAI API key provided. Scene selection will fail.');
+    }
   }
 
   private validateJsonResponse(response: string): any {
@@ -35,6 +39,10 @@ export class SceneSelectionService {
   }
 
   private async callChatGPT(messages: { role: string; content: string }[]): Promise<string> {
+    if (!this.config.openaiApiKey) {
+      throw new Error('OpenAI API key is required for scene selection');
+    }
+
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -46,23 +54,20 @@ export class SceneSelectionService {
           model: this.config.model,
           messages,
           temperature: this.config.temperature,
-          max_tokens: this.config.maxTokens,
-          response_format: { type: "json_object" }  // Force JSON response format
+          max_tokens: this.config.maxTokens
         })
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to call ChatGPT: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Failed to call ChatGPT: ${response.status} ${response.statusText} - ${errorData.error?.message || ''}`);
       }
 
       const data = await response.json();
       return data.choices[0].message.content;
     } catch (error) {
       console.error('Error calling ChatGPT:', error);
-      if (error instanceof Error) {
-        throw new Error(error.message);
-      }
-      throw new Error(String(error));
+      throw error;
     }
   }
 

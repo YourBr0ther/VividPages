@@ -2,6 +2,7 @@ import { Chapter } from './epubService';
 import { Scene, ImageGenerationService } from './imageGenerationService';
 import { OpenAIImageService } from './openAIImageService';
 import { SceneSelectionService } from './sceneSelectionService';
+import { ImageStorageService } from './imageStorageService';
 
 export type GenerationStep = 'analyzing' | 'generating-prompt' | 'generating-image' | 'complete';
 export type ImageProvider = 'stable-diffusion' | 'openai';
@@ -43,6 +44,7 @@ export class BookImageServiceError extends Error {
 export class BookImageService {
   private imageGenerationService: ImageGenerationService | OpenAIImageService;
   private sceneSelectionService: SceneSelectionService;
+  private imageStorageService: ImageStorageService;
   private maxChapters: number;
   private onProgress?: (scene: number, step: GenerationStep) => void;
 
@@ -50,8 +52,11 @@ export class BookImageService {
     const env = typeof import.meta !== 'undefined' ? import.meta.env : process.env;
     this.maxChapters = config.maxChapters || parseInt(env.VITE_MAX_CHAPTERS || '3');
     this.onProgress = config.onProgress;
+    this.imageStorageService = new ImageStorageService();
 
     const imageProvider = config.imageProvider || (env.VITE_IMAGE_PROVIDER as ImageProvider) || 'stable-diffusion';
+    const maxScenesPerChapter = config.maxScenesPerChapter || parseInt(env.VITE_MAX_SCENES_PER_CHAPTER || '5');
+    const openaiApiKey = config.openaiApiKey || env.VITE_OPENAI_API_KEY;
 
     if (imageProvider === 'openai') {
       this.imageGenerationService = new OpenAIImageService({
@@ -66,14 +71,21 @@ export class BookImageService {
     }
 
     this.sceneSelectionService = new SceneSelectionService({
-      openaiApiKey: config.openaiApiKey,
-      maxScenesPerChapter: config.maxScenesPerChapter,
+      openaiApiKey,
+      maxScenesPerChapter,
       ...config.sceneSelectionConfig
     });
   }
 
   async processChapter(chapter: Chapter): Promise<Scene[]> {
     try {
+      // Check if we already have scenes for this chapter
+      const existingScenes = await this.imageStorageService.getScenesForChapter(chapter.id);
+      if (existingScenes.length > 0) {
+        console.log('Found existing scenes for chapter:', chapter.id);
+        return existingScenes;
+      }
+
       // Step 1: Select scenes from the chapter
       this.onProgress?.(1, 'analyzing');
       console.log('Selecting scenes from chapter:', chapter.id);
@@ -120,8 +132,12 @@ export class BookImageService {
               throw new BookImageServiceError('No valid image data or URL was generated for scene');
             }
             console.log(`Successfully generated image for scene ${index + 1}`);
+            
+            // Save the scene to storage
+            await this.imageStorageService.saveScene(result);
+            
             this.onProgress?.(index + 1, 'complete');
-            return { ...result, chapterId: chapter.id };
+            return result;
           } catch (error) {
             console.error(`Error generating image for scene ${index + 1}:`, {
               error,
@@ -163,6 +179,22 @@ export class BookImageService {
       return chapterScenes;
     } catch (error) {
       throw new BookImageServiceError('Failed to process book', error instanceof Error ? error : undefined);
+    }
+  }
+
+  async clearChapterScenes(chapterId: string): Promise<void> {
+    try {
+      await this.imageStorageService.deleteScenesForChapter(chapterId);
+    } catch (error) {
+      throw new BookImageServiceError('Failed to clear chapter scenes', error instanceof Error ? error : undefined);
+    }
+  }
+
+  async clearAllScenes(): Promise<void> {
+    try {
+      await this.imageStorageService.clearAllScenes();
+    } catch (error) {
+      throw new BookImageServiceError('Failed to clear all scenes', error instanceof Error ? error : undefined);
     }
   }
 } 
