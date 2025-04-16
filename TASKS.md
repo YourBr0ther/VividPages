@@ -8,10 +8,6 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 - [x] Create Vite React application with TypeScript
 - [x] Set up folder structure (components, services, utils)
 - [x] Install essential dependencies:
-  - React Router for navigation
-  - Tailwind CSS for styling
-  - Vitest for testing
-  - ESLint and Prettier for code quality
 - [x] Configure Vite development environment
 - [x] Set up ESLint and Prettier
 - [x] Configure testing with Vitest
@@ -28,8 +24,8 @@ This document outlines the specific tasks for developing the Enhanced eBook Read
 - [x] Add unit tests for parser functionality
 
 ### 1.3 Image Generation Service Integration (4 days)
-- [ ] Research and select appropriate Flux AI model endpoints (fal.ai)
-- [ ] Create API service for text-to-image generation
+- [x] Research and select appropriate AI model endpoints (ChatGPT + Stable Diffusion)
+- [x] Create API service for text-to-image generation
 - [ ] Implement initial chapter image generation functionality
 - [ ] Develop image caching and storage mechanism
 - [ ] Create inpainting service for character updates

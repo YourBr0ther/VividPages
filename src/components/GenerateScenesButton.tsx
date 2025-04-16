@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Chapter } from '../services/epubService';
 import { BookImageService } from '../services/bookImageService';
 import { Scene } from '../services/imageGenerationService';
+import GenerationProgress from './GenerationProgress';
 
 interface GenerateScenesButtonProps {
   chapter: Chapter;
@@ -11,15 +12,25 @@ interface GenerateScenesButtonProps {
 const GenerateScenesButton: React.FC<GenerateScenesButtonProps> = ({ chapter, onScenesGenerated }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [currentScene, setCurrentScene] = useState(1);
+  const [currentStep, setCurrentStep] = useState<'analyzing' | 'generating-prompt' | 'generating-image' | 'complete'>('analyzing');
+  const [totalScenes] = useState(parseInt(import.meta.env.VITE_MAX_SCENES_PER_CHAPTER || '5'));
 
   const handleGenerateScenes = async () => {
     try {
       setIsLoading(true);
       setError('');
+      setCurrentScene(1);
+      setCurrentStep('analyzing');
 
-      const bookImageService = new BookImageService();
+      const bookImageService = new BookImageService({
+        onProgress: (scene: number, step: 'analyzing' | 'generating-prompt' | 'generating-image' | 'complete') => {
+          setCurrentScene(scene);
+          setCurrentStep(step);
+        }
+      });
+
       const scenes = await bookImageService.processChapter(chapter);
-      
       onScenesGenerated(scenes);
     } catch (err) {
       console.error('Error generating scenes:', err);
@@ -30,7 +41,7 @@ const GenerateScenesButton: React.FC<GenerateScenesButtonProps> = ({ chapter, on
   };
 
   return (
-    <div className="flex flex-col items-center space-y-2">
+    <div className="flex flex-col items-center space-y-4">
       <button
         onClick={handleGenerateScenes}
         disabled={isLoading}
@@ -42,7 +53,19 @@ const GenerateScenesButton: React.FC<GenerateScenesButtonProps> = ({ chapter, on
       >
         {isLoading ? 'Generating Scenes...' : 'Generate Scenes'}
       </button>
-      {error && (
+
+      {isLoading && (
+        <div className="w-full max-w-md">
+          <GenerationProgress
+            totalScenes={totalScenes}
+            currentScene={currentScene}
+            currentStep={currentStep}
+            error={error}
+          />
+        </div>
+      )}
+
+      {!isLoading && error && (
         <p className="text-red-500 text-sm">{error}</p>
       )}
     </div>

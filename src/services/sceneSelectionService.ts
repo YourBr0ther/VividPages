@@ -68,7 +68,7 @@ export class SceneSelectionService {
 
   async selectScenesFromChapter(chapter: Chapter): Promise<Scene[]> {
     try {
-      const systemPrompt = `You are an expert at analyzing literary text and identifying key scenes that would make compelling visual representations.
+      const systemPrompt = `You are an expert at analyzing literary text and identifying key scenes that would make compelling visual representations. 
         Your task is to identify exactly ${this.config.maxScenesPerChapter} most visually significant scenes from the given chapter.
         You must respond with a JSON object containing a 'scenes' array. Each scene in the array must have:
         1. 'description': A brief description of the scene (string)
@@ -101,6 +101,7 @@ export class SceneSelectionService {
       const scenes = parsedResponse.scenes.map((scene: any) => ({
         description: scene.description || 'No description provided',
         prompt: '', // This will be filled by the prompt generation service
+        imageData: '', // This will be filled by the image generation service
         chapterId: chapter.id,
         paragraphIndex: typeof scene.paragraphIndex === 'number' ? scene.paragraphIndex : 0
       }));

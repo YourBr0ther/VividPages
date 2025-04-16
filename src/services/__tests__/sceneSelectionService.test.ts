@@ -26,7 +26,7 @@ describe('SceneSelectionService', () => {
     service = new SceneSelectionService(mockConfig);
     
     // Mock fetch globally
-    global.fetch = vi.fn();
+    (global.fetch as any) = vi.fn();
   });
 
   afterEach(() => {
@@ -36,11 +36,22 @@ describe('SceneSelectionService', () => {
 
   describe('selectScenesFromChapter', () => {
     it('should select scenes from a chapter', async () => {
-      const mockResponse = JSON.stringify([
-        { description: 'A dramatic battle scene', paragraphIndex: 5 },
-        { description: 'A peaceful village', paragraphIndex: 10 },
-        { description: 'A mysterious forest', paragraphIndex: 15 }
-      ]);
+      const mockResponse = JSON.stringify({
+        scenes: [
+          {
+            description: 'A dramatic battle scene',
+            paragraphIndex: 5
+          },
+          {
+            description: 'A quiet moment of reflection',
+            paragraphIndex: 10
+          },
+          {
+            description: 'The final confrontation',
+            paragraphIndex: 15
+          }
+        ]
+      });
 
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
@@ -49,8 +60,8 @@ describe('SceneSelectionService', () => {
 
       const chapter: Chapter = {
         id: 'chapter1',
-        title: 'The Adventure Begins',
-        content: 'Once upon a time...',
+        title: 'The Battle',
+        content: 'The warriors clashed...',
         sections: [],
         characterDescriptions: []
       };
@@ -73,6 +84,7 @@ describe('SceneSelectionService', () => {
       expect(result[0]).toEqual({
         description: 'A dramatic battle scene',
         prompt: '',
+        imageData: '',
         chapterId: 'chapter1',
         paragraphIndex: 5
       });
@@ -112,6 +124,7 @@ describe('SceneSelectionService', () => {
       const scene: Scene = {
         description: 'A dramatic battle scene',
         prompt: '',
+        imageData: '',
         chapterId: 'chapter1',
         paragraphIndex: 5
       };
@@ -153,6 +166,7 @@ describe('SceneSelectionService', () => {
       const scene: Scene = {
         description: 'A dramatic battle scene',
         prompt: '',
+        imageData: '',
         chapterId: 'chapter1',
         paragraphIndex: 5
       };
