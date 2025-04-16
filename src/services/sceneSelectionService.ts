@@ -120,7 +120,7 @@ export class SceneSelectionService {
 
   async generatePromptForScene(scene: Scene, chapter: Chapter): Promise<Scene> {
     try {
-      const systemPrompt = `You are an expert at creating detailed, visually rich prompts for image generation.
+      const systemPrompt = `You are an expert at creating detailed, visually rich prompts for image generation for the book, A Soul To Keep.
         Your task is to create a detailed prompt for Stable Diffusion that will generate an image matching the scene description.
         You must respond with a JSON object containing a 'prompt' field that specifies:
         - Visual style (e.g., "digital art", "oil painting", "photorealistic")
