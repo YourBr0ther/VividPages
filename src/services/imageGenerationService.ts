@@ -3,7 +3,8 @@ import { Chapter } from './epubService';
 export interface Scene {
   description: string;
   prompt: string;
-  imageData?: string;
+  imageData?: string; // This can be either a base64 string or a URL
+  imageUrl?: string;  // Explicit URL field for OpenAI images
   chapterId: string;
   paragraphIndex: number;
 }
@@ -22,6 +23,7 @@ export interface ImageGenerationConfig {
   enhancePrompt?: boolean;
   batchSize?: number;
   clipSkip?: number;
+  vae?: string;
 }
 
 export class ImageGenerationService {
@@ -33,16 +35,17 @@ export class ImageGenerationService {
       stableDiffusionUrl: config.stableDiffusionUrl || import.meta.env.VITE_STABLE_DIFFUSION_URL || defaultUrl,
       model: config.model || import.meta.env.VITE_STABLE_DIFFUSION_MODEL || 'flux1-dev-fp8',
       steps: config.steps || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_STEPS || '20'),
-      cfgScale: config.cfgScale || parseFloat(import.meta.env.VITE_STABLE_DIFFUSION_CFG_SCALE || '1'),
+      cfgScale: config.cfgScale || parseFloat(import.meta.env.VITE_STABLE_DIFFUSION_CFG_SCALE || '7.5'),
       distilledCfgScale: config.distilledCfgScale || parseFloat(import.meta.env.VITE_STABLE_DIFFUSION_DISTILLED_CFG_SCALE || '3.5'),
-      width: config.width || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_WIDTH || '1152'),
-      height: config.height || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_HEIGHT || '896'),
+      width: config.width || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_WIDTH || '768'),
+      height: config.height || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_HEIGHT || '512'),
       sampler: config.sampler || import.meta.env.VITE_STABLE_DIFFUSION_SAMPLER || 'Euler',
       seed: config.seed || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_SEED || '-1'),
       safetyChecker: config.safetyChecker ?? false,
       enhancePrompt: config.enhancePrompt ?? false,
       batchSize: config.batchSize || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_BATCH_SIZE || '1'),
-      clipSkip: config.clipSkip || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_CLIP_SKIP || '2')
+      clipSkip: config.clipSkip || parseInt(import.meta.env.VITE_STABLE_DIFFUSION_CLIP_SKIP || '2'),
+      vae: config.vae || import.meta.env.VITE_STABLE_DIFFUSION_VAE || 'ae.sft'
     };
   }
 
@@ -67,6 +70,7 @@ export class ImageGenerationService {
   private logGenerationSettings(prompt: string, data: any) {
     console.log('=== Stable Diffusion Generation Settings ===');
     console.log('Model:', this.config.model);
+    console.log('VAE:', this.config.vae);
     console.log('Prompt:', prompt);
     console.log('Steps:', this.config.steps);
     console.log('CFG Scale:', this.config.cfgScale);
@@ -96,13 +100,12 @@ export class ImageGenerationService {
         restore_faces: false,
         tiling: false,
         enable_hr: false,
-        denoising_strength: 0.7,
         override_settings: {
           sd_model_checkpoint: this.config.model,
           CLIP_stop_at_last_layers: this.config.clipSkip,
-          distilled_cfg_scale: this.config.distilledCfgScale
-        },
-        override_settings_restore_afterwards: true
+          distilled_cfg_scale: this.config.distilledCfgScale,
+          sd_vae: this.config.vae
+        }
       };
 
       console.log('Sending request to Stable Diffusion with payload:', JSON.stringify(requestBody, null, 2));

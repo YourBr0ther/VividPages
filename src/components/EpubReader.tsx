@@ -150,11 +150,15 @@ const EpubReader: React.FC = () => {
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
                       <h4 className="font-medium text-gray-800 mb-2">Scene {index + 1}</h4>
                       <p className="text-sm text-gray-600 mb-4">{scene.description}</p>
-                      {scene.imageData && (
+                      {(scene.imageData || scene.imageUrl) && (
                         <img 
-                          src={scene.imageData} 
+                          src={scene.imageUrl || scene.imageData} 
                           alt={`Scene ${index + 1}`}
                           className="w-full rounded-lg"
+                          onError={(e) => {
+                            console.error('Error loading image:', e);
+                            e.currentTarget.src = 'placeholder.png'; // You might want to add a placeholder image
+                          }}
                         />
                       )}
                     </div>
