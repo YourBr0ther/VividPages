@@ -152,7 +152,7 @@ const EpubReader: React.FC = () => {
                       <p className="text-sm text-gray-600 mb-4">{scene.description}</p>
                       {scene.imageData && (
                         <img 
-                          src={`data:image/png;base64,${scene.imageData}`} 
+                          src={scene.imageData} 
                           alt={`Scene ${index + 1}`}
                           className="w-full rounded-lg"
                         />
