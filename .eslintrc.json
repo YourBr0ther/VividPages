@@ -1,0 +1,30 @@
+{
+  "extends": "next/core-web-vitals",
+  "rules": {
+    "@typescript-eslint/no-explicit-any": [
+      "error",
+      {
+        "ignoreRestArgs": false
+      }
+    ],
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/lib/epub-parser/**/*.ts",
+        "src/lib/ollama-client/**/*.ts", 
+        "src/lib/image-generator/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  vividpages:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_HOST=http://ollama:11434
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    depends_on:
+      - ollama
+    networks:
+      - vividpages-network
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - vividpages-network
+    restart: unless-stopped
+    environment:
+      - OLLAMA_ORIGINS=*
+    # Uncomment the following lines if you have a GPU
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  ollama_data:
+    driver: local
+
+networks:
+  vividpages-network:
+    driver: bridge

@@ -1,0 +1,134 @@
+
+> vividpages@0.1.0 dev
+> next dev
+
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:3000
+   - Network:      http://10.0.2.177:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1420ms
+ ○ Compiling /api/characters ...
+ ✓ Compiled /api/characters in 1021ms (285 modules)
+Failed to parse character extraction response: Error: Response does not contain an array of characters
+    at OllamaClient.extractCharacters (src/lib/ollama-client.ts:121:16)
+    at async POST (src/app/api/characters/route.ts:32:23)
+  119 |             }));
+  120 |         } else {
+> 121 |           throw new Error('Response does not contain an array of characters');
+      |                ^
+  122 |         }
+  123 |       } catch (parseError) {
+  124 |         console.error('Failed to parse character extraction response:', parseError);
+Raw response: {
+  "name": "John",
+  "description": "Tall detective with dark hair",
+  "importance": 0.8,
+  "imagePrompt": "Male adult, tall build, dark hair, detective attire"
+}
+
+ 	      
+ 	      
+ 	      
+ 	      
+ 	      
+ 	      
+ 	      
+ 	      
+ 	      
+ 
+  	      
+
+ POST /api/characters 200 in 7057ms
+ ✓ Compiled in 103ms (99 modules)
+ POST /api/characters 200 in 4641ms
+ POST /api/characters 200 in 7528ms
+ ○ Compiling / ...
+ ✓ Compiled / in 847ms (609 modules)
+ GET / 200 in 1028ms
+ ○ Compiling /workshop ...
+ ✓ Compiled /workshop in 1066ms (1185 modules)
+ GET /workshop 200 in 1334ms
+ ✓ Compiled /api/models in 230ms (1187 modules)
+ GET /api/models 200 in 564ms
+ GET /api/models 200 in 483ms
+Error generating character portrait: Error: OpenAI API error: 400 - Unknown parameter: 'quality'.
+    at ImageGenerator.generateCharacterPortrait (src/lib/image-generator.ts:51:14)
+    at async eval (src/app/api/characters/route.ts:47:28)
+    at async POST (src/app/api/characters/route.ts:44:31)
+  49 |       if (!response.ok) {
+  50 |         const errorData = await response.json().catch(() => ({}));
+> 51 |         throw new Error(`OpenAI API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+     |              ^
+  52 |       }
+  53 |
+  54 |       const data = await response.json();
+Failed to generate image for Dawn: Error: Image generation failed: OpenAI API error: 400 - Unknown parameter: 'quality'.
+    at ImageGenerator.generateCharacterPortrait (src/lib/image-generator.ts:70:12)
+    at async eval (src/app/api/characters/route.ts:47:28)
+    at async POST (src/app/api/characters/route.ts:44:31)
+  68 |     } catch (error) {
+  69 |       console.error('Error generating character portrait:', error);
+> 70 |       throw new Error(`Image generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+     |            ^
+  71 |     }
+  72 |   }
+  73 |
+ POST /api/characters 200 in 7485ms
+ ✓ Compiled /api/generate-image in 217ms (1189 modules)
+Error in generate-image API: TypeError: imageGenerator.validateApiKey is not a function
+    at POST (src/app/api/generate-image/route.ts:34:44)
+  32 |
+  33 |     // Validate API key
+> 34 |     const isValidKey = await imageGenerator.validateApiKey();
+     |                                            ^
+  35 |     if (!isValidKey) {
+  36 |       return NextResponse.json(
+  37 |         { error: 'Invalid OpenAI API key' },
+ POST /api/generate-image 500 in 308ms
+ ✓ Compiled in 277ms (1198 modules)
+ GET /workshop 200 in 69ms
+ ✓ Compiled in 223ms (1178 modules)
+ GET /workshop 200 in 91ms
+ ✓ Compiled in 106ms (533 modules)
+ GET /workshop 200 in 14ms
+ ✓ Compiled in 108ms (533 modules)
+ GET /workshop 200 in 16ms
+ ✓ Compiled /api/generate-image in 74ms (665 modules)
+ GET /workshop 200 in 112ms
+ POST /api/generate-image 200 in 11070ms
+ GET /workshop 200 in 158ms
+ ✓ Compiled /api/models in 119ms (668 modules)
+ GET /api/models 200 in 621ms
+ GET /api/models 200 in 354ms
+ ✓ Compiled /api/characters in 221ms (670 modules)
+ GET /workshop 200 in 60ms
+ POST /api/characters 200 in 19645ms
+ GET /workshop 200 in 168ms
+ GET /api/models 200 in 460ms
+ GET /api/models 200 in 409ms
+ ⚠ Found a change in next.config.js. Restarting the server to apply the changes...
+   ▲ Next.js 15.4.5
+   - Local:        http://localhost:3000
+   - Network:      http://10.0.2.177:3000
+   - Environments: .env
+
+ ✓ Starting...
+> [PWA] PWA support is disabled
+> [PWA] PWA support is disabled
+ ✓ Ready in 1886ms
+ ○ Compiling /api/characters ...
+ ✓ Compiled /api/characters in 981ms (285 modules)
+ POST /api/characters 200 in 22585ms
+ ○ Compiling /workshop ...
+ ✓ Compiled /workshop in 2.7s (1182 modules)
+ GET /workshop 200 in 2970ms
+ ✓ Compiled /favicon.ico in 203ms (652 modules)
+ GET /favicon.ico 200 in 240ms
+ ✓ Compiled /api/models in 206ms (1172 modules)
+ GET /api/models 200 in 553ms
+ GET /api/models 200 in 628ms
+ POST /api/characters 200 in 20137ms
