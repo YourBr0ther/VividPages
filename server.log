@@ -132,3 +132,394 @@ Error in generate-image API: TypeError: imageGenerator.validateApiKey is not a f
  GET /api/models 200 in 553ms
  GET /api/models 200 in 628ms
  POST /api/characters 200 in 20137ms
+ ✓ Compiled in 187ms (532 modules)
+ GET /workshop 200 in 59ms
+ ✓ Compiled in 109ms (532 modules)
+ GET /workshop 200 in 85ms
+ ✓ Compiled in 92ms (532 modules)
+ GET /workshop 200 in 12ms
+ ✓ Compiled in 92ms (532 modules)
+ GET /workshop 200 in 13ms
+ ✓ Compiled in 88ms (532 modules)
+ GET /workshop 200 in 13ms
+ GET /workshop 200 in 180ms
+ GET /favicon.ico 200 in 14ms
+ GET /api/models 200 in 344ms
+ GET /api/models 200 in 454ms
+ POST /api/characters 200 in 12579ms
+ GET /api/models 200 in 361ms
+ GET /api/models 200 in 317ms
+Failed to parse character extraction response: Error: Response does not contain valid character data
+    at OllamaClient.extractCharacters (src/lib/ollama-client.ts:126:16)
+    at async POST (src/app/api/characters/route.ts:32:23)
+  124 |             }));
+  125 |         } else {
+> 126 |           throw new Error('Response does not contain valid character data');
+      |                ^
+  127 |         }
+  128 |       } catch (parseError) {
+  129 |         console.error('Failed to parse character extraction response:', parseError);
+Raw response: {}
+
+
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ POST /api/characters 200 in 1103ms
+ GET /api/models 200 in 386ms
+ GET /api/models 200 in 611ms
+ ✓ Compiled / in 356ms (1187 modules)
+ GET / 200 in 518ms
+ ✓ Compiled /favicon.ico in 81ms (670 modules)
+ GET /favicon.ico 200 in 108ms
+ GET /workshop 200 in 191ms
+ GET /api/models 200 in 742ms
+ GET /api/models 200 in 2892ms
+ POST /api/characters 200 in 15752ms
+ ✓ Compiled in 296ms (1162 modules)
+ GET /workshop 200 in 88ms
+ ✓ Compiled in 82ms (533 modules)
+ GET /workshop 200 in 14ms
+ ✓ Compiled in 76ms (533 modules)
+ GET /workshop 200 in 11ms
+ ✓ Compiled in 85ms (533 modules)
+ GET /workshop 200 in 14ms
+ GET /workshop 200 in 43ms
+ ✓ Compiled in 158ms (1148 modules)
+ GET /workshop 200 in 52ms
+ ✓ Compiled in 523ms (1162 modules)
+ GET /workshop 200 in 33ms
+ ✓ Compiled in 190ms (1162 modules)
+ GET /workshop 200 in 40ms
+ ✓ Compiled in 153ms (1162 modules)
+ GET /workshop 200 in 38ms
+ ✓ Compiled in 152ms (1162 modules)
+ GET /workshop 200 in 36ms
+ ✓ Compiled /api/scenes in 197ms (1169 modules)
+ POST /api/scenes 200 in 13383ms
+ POST /api/scenes 200 in 24920ms
+ GET /workshop 200 in 221ms
+ ✓ Compiled /favicon.ico in 146ms (646 modules)
+ GET /favicon.ico 200 in 181ms
+ ✓ Compiled /api/models in 80ms (651 modules)
+ GET /workshop 200 in 53ms
+ GET /api/models 200 in 446ms
+ GET /api/models 200 in 418ms
+ ✓ Compiled /api/characters in 141ms (654 modules)
+ GET /workshop 200 in 42ms
+ POST /api/characters 200 in 17066ms
+ ✓ Compiled /api/scenes in 96ms (656 modules)
+Failed to parse scene extraction response: SyntaxError: Expected ':' after property name in JSON at position 900
+    at JSON.parse (<anonymous>)
+    at OllamaClient.extractScenes (src/lib/ollama-client.ts:217:36)
+    at async POST (src/app/api/scenes/route.ts:69:19)
+  215 |       
+  216 |       try {
+> 217 |         const parsedResponse = JSON.parse(data.response);
+      |                                    ^
+  218 |         
+  219 |         // Handle different response formats
+  220 |         let scenes = parsedResponse;
+Raw response: { "Dawn catches her reflection in a polished silver mirror. The air feels warm as she adjusts her green scarf around her neck. She glances at the clock on the wall, which shows it's 8:15 PM. Her heart races at the thought of what's coming tomorrow. Dawn steps into the kitchen to fetch a glass of milk for herself and James. The living room is quiet except for the soft rustle of leaves outside her window. She looks up as a group of crows flies overhead, landing on the branches of a tree across the street. Dawn frowns slightly at the sight. She quickly sets about making tea for both herself and James, stirring the pot with care. As she pours milk into their glasses, she can't help but wonder what tomorrow holds for them all." 
+
+   
+            
+           
+
+         
+
+       
+        
+       
+    
+  
+
+
+
+
+
+
+
+
+
+   
+
+
+    
+          
+
+   
+
+
+    
+
+
+
+
+       
+
+
+
+
+
+
+
+
+
+
+
+
+     
+
+
+
+
+
+
+
+
+
+
+
+
+
+     
+ POST /api/scenes 200 in 3160ms
+ GET /api/models 200 in 349ms
+ GET /api/models 200 in 404ms
+Failed to parse character extraction response: Error: Response does not contain valid character data
+    at OllamaClient.extractCharacters (src/lib/ollama-client.ts:138:16)
+    at async POST (src/app/api/characters/route.ts:32:23)
+  136 |             }));
+  137 |         } else {
+> 138 |           throw new Error('Response does not contain valid character data');
+      |                ^
+  139 |         }
+  140 |       } catch (parseError) {
+  141 |         console.error('Failed to parse character extraction response:', parseError);
+Raw response: {
+
+}
+
+
+ 
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+ 
+
+ 
+
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ POST /api/characters 200 in 1490ms
+ GET /api/models 200 in 545ms
+ GET /api/models 200 in 617ms
+Failed to parse character extraction response: Error: Response does not contain valid character data
+    at OllamaClient.extractCharacters (src/lib/ollama-client.ts:138:16)
+    at async POST (src/app/api/characters/route.ts:32:23)
+  136 |             }));
+  137 |         } else {
+> 138 |           throw new Error('Response does not contain valid character data');
+      |                ^
+  139 |         }
+  140 |       } catch (parseError) {
+  141 |         console.error('Failed to parse character extraction response:', parseError);
+Raw response: {
+
+}
+
+
+
+ 
+
+  
+  
+
+  
+
+  
+
+  
+
+ 
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+ POST /api/characters 200 in 1335ms
+ ✓ Compiled in 689ms (1185 modules)
+ GET /workshop 200 in 70ms
+ GET /workshop 200 in 182ms
+ ✓ Compiled /favicon.ico in 82ms (654 modules)
+ GET /favicon.ico 200 in 115ms
+ GET /api/models 200 in 329ms
+ GET /api/models 200 in 244ms
+ ✓ Compiled in 168ms (1187 modules)
+ GET /workshop 200 in 54ms
+ GET /api/models 200 in 169ms
+ ✓ Compiled in 146ms (1187 modules)
+ GET /workshop 200 in 35ms
+ ✓ Compiled in 152ms (1187 modules)
+ GET /workshop 200 in 44ms
+ POST /api/characters 200 in 15752ms
+ ✓ Compiled in 200ms (1187 modules)
+ GET /workshop 200 in 38ms
+ GET /workshop 200 in 126ms
+ ✓ Compiled in 174ms (1187 modules)
+ GET /workshop 200 in 39ms
+ GET /workshop 200 in 78ms
+ GET /workshop 200 in 43ms
+ GET /favicon.ico 200 in 31ms
+ GET /api/models 200 in 510ms
+ GET /api/models 200 in 354ms

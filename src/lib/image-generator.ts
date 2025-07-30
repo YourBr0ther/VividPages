@@ -191,6 +191,59 @@ export class ImageGenerator {
     }
   }
 
+  async generateSceneWithCharacterPortraits(
+    sceneDescription: string,
+    setting: string,
+    mood: string,
+    characterPortraits: Array<{
+      name: string;
+      description: string;
+      imageUrl?: string;
+    }>,
+    options: ImageGenerationOptions & { model?: string; style?: string } = {}
+  ): Promise<GeneratedImage> {
+    try {
+      const { quality = 'standard', size = '1024x1024', model = 'dall-e-3' } = options;
+      
+      // Build character descriptions for consistent appearance
+      const characterDescriptions = characterPortraits.map(char => {
+        return `${char.name} (${char.description})`;
+      }).join(', ');
+      
+      // Create enhanced scene prompt with character consistency
+      let prompt = `A detailed cinematic scene: ${sceneDescription}`;
+      
+      if (characterPortraits.length > 0) {
+        prompt += ` featuring ${characterDescriptions}`;
+      }
+      
+      if (setting) {
+        prompt += ` in ${setting}`;
+      }
+      
+      if (mood) {
+        prompt += ` with a ${mood} mood`;
+      }
+      
+      // Add style instructions for consistency
+      prompt += '. Professional book illustration style, detailed character faces matching their descriptions, cinematic composition, atmospheric lighting, high quality digital art.';
+      
+      // Note: DALL-E doesn't support image-to-image generation, so we rely on detailed text descriptions
+      // In the future, this could be enhanced with ControlNet or other tools that support reference images
+      
+      return await this.generateImage({
+        prompt,
+        model,
+        quality,
+        size
+      });
+
+    } catch (error) {
+      console.error('Error generating scene with character portraits:', error);
+      throw new Error(`Scene generation with character portraits failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   async getAvailableModels(): Promise<string[]> {
     try {
       const response = await fetch('https://api.openai.com/v1/models', {

@@ -174,6 +174,53 @@ export default function WorkshopPage() {
     }
   }, []);
 
+  const handleSceneGeneration = useCallback(async () => {
+    if (!project) return;
+
+    setProcessing(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/scenes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bookText: project.chapters.slice(0, project.configuration.selectedChapters)
+            .map(ch => ch.content).join('\n\n'),
+          characters: project.characters,
+          scenesPerChapter: project.configuration.scenesPerChapter,
+          llmModel: project.configuration.llmModel,
+          imageModel: project.configuration.imageModel,
+          imageQuality: project.configuration.imageQuality,
+          generateImages: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate scenes');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setProject(prev => prev ? {
+          ...prev,
+          scenes: data.scenes,
+        } : null);
+        setCurrentStep('scenes');
+      } else {
+        throw new Error(data.error || 'Scene generation failed');
+      }
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Scene generation failed');
+      console.error('Scene generation error:', err);
+    } finally {
+      setProcessing(false);
+    }
+  }, [project]);
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 'upload':
@@ -292,6 +339,83 @@ export default function WorkshopPage() {
                 Back to Configuration
               </button>
               <button
+                onClick={handleSceneGeneration}
+                disabled={processing || project.characters.length === 0}
+                className="px-6 py-3 bg-primary-gold hover:bg-accent-gold text-primary-navy font-semibold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {processing ? 'Generating Scenes...' : 'Generate Scenes'}
+              </button>
+            </div>
+          </div>
+        ) : null;
+
+      case 'scenes':
+        return project ? (
+          <div className="max-w-6xl mx-auto space-y-8">
+            <div className="text-center">
+              <h1 className="text-4xl font-serif font-bold text-primary-gold mb-2">
+                Generated Scenes
+              </h1>
+              <p className="text-text-muted">
+                {project.scenes.length} scenes extracted from your book
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {project.scenes.map((scene, index) => (
+                <div key={scene.id} className="bg-primary-navy/30 backdrop-blur-sm rounded-xl p-6 space-y-4">
+                  {/* Scene Image */}
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden bg-primary-navy/50">
+                    {scene.image ? (
+                      <Image
+                        src={scene.image.url}
+                        alt={scene.title}
+                        fill
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                        🎬
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Scene Info */}
+                  <div className="space-y-2">
+                    <h3 className="font-serif font-semibold text-text-light text-lg">
+                      {scene.title}
+                    </h3>
+                    <p className="text-text-muted text-sm line-clamp-3">
+                      {scene.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-1 bg-primary-gold/20 text-primary-gold rounded">
+                        {scene.setting}
+                      </span>
+                      <span className="px-2 py-1 bg-accent-gold/20 text-accent-gold rounded">
+                        {scene.mood}
+                      </span>
+                    </div>
+
+                    {scene.characters.length > 0 && (
+                      <div className="text-xs text-text-muted">
+                        Characters: {scene.characters.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => setCurrentStep('characters')}
+                className="px-6 py-3 border border-primary-gold/30 text-text-light rounded-lg hover:border-primary-gold/60 transition-colors"
+              >
+                Back to Characters
+              </button>
+              <button
                 onClick={() => setCurrentStep('gallery')}
                 className="px-6 py-3 bg-primary-gold hover:bg-accent-gold text-primary-navy font-semibold rounded-lg transition-colors"
               >
@@ -354,6 +478,7 @@ export default function WorkshopPage() {
               { key: 'configure', label: 'Configure', icon: '⚙️' },
               { key: 'processing', label: 'Processing', icon: '🤖' },
               { key: 'characters', label: 'Characters', icon: '👥' },
+              { key: 'scenes', label: 'Scenes', icon: '🎬' },
               { key: 'gallery', label: 'Gallery', icon: '🎨' },
             ].map((step, _index) => (
               <div

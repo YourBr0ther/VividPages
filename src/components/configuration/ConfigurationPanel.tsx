@@ -30,6 +30,8 @@ interface ConfigurationPanelProps {
   isProcessing?: boolean;
 }
 
+const STORAGE_KEY = 'vividpages-config';
+
 const DEFAULT_CONFIG: Configuration = {
   selectedChapters: 1,
   scenesPerChapter: 1,
@@ -39,12 +41,52 @@ const DEFAULT_CONFIG: Configuration = {
   characterSensitivity: 0.7,
 };
 
+// Load saved configuration from localStorage
+const loadSavedConfig = (): Partial<Configuration> => {
+  if (typeof window === 'undefined') return {};
+  
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch (error) {
+    console.error('Failed to load saved configuration:', error);
+    return {};
+  }
+};
+
+// Save configuration to localStorage
+const saveConfig = (config: Configuration) => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    // Only save user preferences, not session-specific values
+    const configToSave = {
+      llmModel: config.llmModel,
+      imageModel: config.imageModel,
+      imageQuality: config.imageQuality,
+      characterSensitivity: config.characterSensitivity,
+      scenesPerChapter: config.scenesPerChapter,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(configToSave));
+  } catch (error) {
+    console.error('Failed to save configuration:', error);
+  }
+};
+
 export default function ConfigurationPanel({ 
   maxChapters, 
   onConfigChange, 
   isProcessing = false 
 }: ConfigurationPanelProps) {
-  const [config, setConfig] = useState<Configuration>(DEFAULT_CONFIG);
+  // Initialize config with saved preferences
+  const [config, setConfig] = useState<Configuration>(() => {
+    const savedConfig = loadSavedConfig();
+    return {
+      ...DEFAULT_CONFIG,
+      selectedChapters: Math.min(maxChapters, DEFAULT_CONFIG.selectedChapters),
+      ...savedConfig,
+    };
+  });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [modelStatus, setModelStatus] = useState<ModelStatus | null>(null);
   const [loadingModels, setLoadingModels] = useState(true);
@@ -59,20 +101,26 @@ export default function ConfigurationPanel({
           if (result.success) {
             setModelStatus(result.data);
             
-            // Update default models if available
+            // Update default models if available and not saved
             const updates: Partial<Configuration> = {};
             
-            // Use first available Ollama model if default not available
+            // Use first available Ollama model if saved model not available
             if (result.data.ollama.available && result.data.ollama.models.length > 0) {
               if (!result.data.ollama.models.includes(config.llmModel)) {
-                updates.llmModel = result.data.ollama.models[0];
+                // Only update if the current model is the default (not user-selected)
+                if (config.llmModel === DEFAULT_CONFIG.llmModel) {
+                  updates.llmModel = result.data.ollama.models[0];
+                }
               }
             }
             
-            // Use first available OpenAI model if default not available
+            // Use first available OpenAI model if saved model not available
             if (result.data.openai.available && result.data.openai.models.length > 0) {
               if (!result.data.openai.models.includes(config.imageModel)) {
-                updates.imageModel = result.data.openai.models[0];
+                // Only update if the current model is the default (not user-selected)
+                if (config.imageModel === DEFAULT_CONFIG.imageModel) {
+                  updates.imageModel = result.data.openai.models[0];
+                }
               }
             }
             
@@ -91,10 +139,18 @@ export default function ConfigurationPanel({
     fetchModels();
   }, []);
 
+  // Notify parent of initial config (including saved preferences)
+  useEffect(() => {
+    onConfigChange(config);
+  }, []);
+
   const updateConfig = (updates: Partial<Configuration>) => {
     const newConfig = { ...config, ...updates };
     setConfig(newConfig);
     onConfigChange(newConfig);
+    
+    // Save configuration to localStorage
+    saveConfig(newConfig);
   };
 
   // Generate dynamic model options based on availability
@@ -140,18 +196,43 @@ export default function ConfigurationPanel({
     </div>
   );
 
+  const clearSavedPreferences = () => {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      // Reset to defaults
+      const resetConfig = { ...DEFAULT_CONFIG, selectedChapters: Math.min(maxChapters, DEFAULT_CONFIG.selectedChapters) };
+      setConfig(resetConfig);
+      onConfigChange(resetConfig);
+    } catch (error) {
+      console.error('Failed to clear saved preferences:', error);
+    }
+  };
+
   return (
     <div className="bg-primary-navy/30 backdrop-blur-sm rounded-xl p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-serif font-semibold text-primary-gold">
           Configuration
         </h2>
-        <button
-          onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-sm text-text-muted hover:text-text-light transition-colors"
-        >
-          {showAdvanced ? 'Hide' : 'Show'} Advanced Options
-        </button>
+        <div className="flex items-center space-x-3">
+          {(typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) && (
+            <button
+              onClick={clearSavedPreferences}
+              className="text-xs text-text-muted hover:text-red-400 transition-colors"
+              title="Clear saved preferences"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-sm text-text-muted hover:text-text-light transition-colors"
+          >
+            {showAdvanced ? 'Hide' : 'Show'} Advanced Options
+          </button>
+        </div>
       </div>
 
       {/* Basic Settings */}
@@ -214,6 +295,11 @@ export default function ConfigurationPanel({
           {loadingModels && (
             <div className="text-xs text-text-muted">
               <span className="animate-pulse">Checking services...</span>
+            </div>
+          )}
+          {!loadingModels && (typeof window !== 'undefined' && localStorage.getItem(STORAGE_KEY)) && (
+            <div className="text-xs text-primary-gold">
+              ✓ Loaded saved preferences
             </div>
           )}
         </div>
