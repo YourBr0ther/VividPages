@@ -146,11 +146,14 @@ export default function WorkshopPage() {
         }),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error('Failed to generate character image');
+        // Use friendly message if available, otherwise fall back to generic error
+        const errorMessage = data.friendlyMessage || data.error || 'Failed to generate character image';
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
       if (data.success) {
         // Update character with generated image
         setProject(prev => {
@@ -240,7 +243,14 @@ export default function WorkshopPage() {
             />
             {error && (
               <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
-                <p className="text-red-400">{error}</p>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <span className="text-red-400 text-lg">❌</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-red-400 font-medium">{error}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -258,6 +268,11 @@ export default function WorkshopPage() {
               </p>
               <p className="text-text-muted">
                 {project.chapters.length} chapters available
+                {project.epubMetadata.processingInfo && (
+                  <span className="text-xs text-primary-gold ml-2">
+                    (filtered from {project.epubMetadata.processingInfo.totalSections} sections)
+                  </span>
+                )}
               </p>
             </div>
 
@@ -285,7 +300,14 @@ export default function WorkshopPage() {
 
             {error && (
               <div className="mt-4 p-4 bg-red-900/20 border border-red-500/30 rounded-lg">
-                <p className="text-red-400">{error}</p>
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0">
+                    <span className="text-red-400 text-lg">❌</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-red-400 font-medium">{error}</p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -93,17 +93,47 @@ export async function POST(request: NextRequest) {
     
     // Handle specific OpenAI API errors
     if (error instanceof Error) {
-      if (error.message.includes('quota')) {
+      if (error.message.includes('quota') || error.message.includes('billing') || error.message.includes('hard limit')) {
         return NextResponse.json(
-          { error: 'API quota exceeded. Please check your OpenAI billing.' },
+          { 
+            error: 'Image generation is currently unavailable due to API limits.',
+            friendlyMessage: '🎨 Image generation is temporarily unavailable. The service has reached its usage limit. Please try again later or contact support if this persists.',
+            type: 'billing_limit'
+          },
           { status: 429 }
         );
       }
       
       if (error.message.includes('content policy')) {
         return NextResponse.json(
-          { error: 'Prompt violates content policy. Please modify your prompt.' },
+          { 
+            error: 'Content not allowed',
+            friendlyMessage: '⚠️ This image cannot be generated as it may violate content guidelines. Please try a different description.',
+            type: 'content_policy'
+          },
           { status: 400 }
+        );
+      }
+
+      if (error.message.includes('rate limit')) {
+        return NextResponse.json(
+          { 
+            error: 'Rate limit exceeded',
+            friendlyMessage: '⏳ Too many requests at once. Please wait a moment and try again.',
+            type: 'rate_limit'
+          },
+          { status: 429 }
+        );
+      }
+
+      if (error.message.includes('insufficient_quota')) {
+        return NextResponse.json(
+          { 
+            error: 'Insufficient quota',
+            friendlyMessage: '💳 Image generation quota has been exceeded. Please check your account billing or try again later.',
+            type: 'insufficient_quota'
+          },
+          { status: 402 }
         );
       }
     }
@@ -111,7 +141,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to generate image',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        friendlyMessage: '🤖 Something went wrong while generating your image. Please try again in a moment.',
+        details: error instanceof Error ? error.message : 'Unknown error',
+        type: 'unknown_error'
       },
       { status: 500 }
     );

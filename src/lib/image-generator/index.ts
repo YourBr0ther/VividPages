@@ -39,15 +39,20 @@ export class ImageGenerator {
   }
 
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
-    const requestBody = {
-      model: request.model || 'dall-e-2',
+    const model = request.model || 'dall-e-2';
+    const requestBody: any = {
+      model,
       prompt: request.prompt,
-      quality: request.quality || 'standard',
       size: request.size || '512x512',
-      style: request.style || 'vivid',
       n: 1,
       response_format: 'url',
     };
+
+    // Only add quality and style for DALL-E 3
+    if (model === 'dall-e-3') {
+      requestBody.quality = request.quality || 'standard';
+      requestBody.style = request.style || 'vivid';
+    }
 
     try {
       const response = await fetch(`${this.baseUrl}/images/generations`, {
@@ -83,9 +88,9 @@ export class ImageGenerator {
         createdAt: new Date().toISOString(),
         metadata: {
           model: requestBody.model,
-          quality: requestBody.quality,
+          quality: requestBody.quality || 'standard',
           size: requestBody.size,
-          style: requestBody.style,
+          style: requestBody.style || 'vivid',
         },
       };
     } catch (error) {
