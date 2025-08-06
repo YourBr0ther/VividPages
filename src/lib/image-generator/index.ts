@@ -5,6 +5,8 @@ export interface ImageGenerationRequest {
   size?: '256x256' | '512x512' | '1024x1024' | '1792x1024' | '1024x1792';
   style?: 'vivid' | 'natural';
   n?: number;
+  artStyle?: string;
+  genre?: string;
 }
 
 export interface ImageGenerationResponse {
@@ -30,6 +32,29 @@ export interface GeneratedImage {
   };
 }
 
+// Style modifier mappings for prompt enhancement
+const ART_STYLE_MODIFIERS = {
+  'digital-art': 'digital art, detailed digital illustration, vibrant colors, clean lines',
+  'oil-painting': 'oil painting, traditional painted artwork, rich textures, brush strokes, classical art style',
+  'watercolor': 'watercolor painting, soft flowing colors, transparent layers, artistic paper texture',
+  'pencil-sketch': 'pencil sketch, detailed charcoal drawing, black and white, artistic shading, hand-drawn',
+  'anime-manga': 'anime style, manga art, Japanese animation style, cel-shaded, expressive features',
+  'photorealistic': 'photorealistic, highly detailed, professional photography quality, realistic lighting',
+  'impressionist': 'impressionist painting, soft brushstrokes, atmospheric lighting, dreamy quality',
+  'art-nouveau': 'art nouveau style, decorative art, flowing organic lines, ornamental design',
+} as const;
+
+const GENRE_MODIFIERS = {
+  'fantasy': 'fantasy setting, magical atmosphere, mythical elements, enchanted environment',
+  'sci-fi': 'science fiction, futuristic setting, advanced technology, cyberpunk elements, space age',
+  'horror': 'dark atmosphere, mysterious lighting, gothic elements, haunting mood, ominous shadows',
+  'mystery': 'noir atmosphere, dramatic lighting, detective story mood, mysterious ambiance',
+  'romance': 'romantic atmosphere, warm lighting, intimate setting, emotional mood, soft colors',
+  'adventure': 'adventurous atmosphere, heroic setting, dynamic composition, action-ready mood',
+  'historical': 'historical setting, period-accurate details, authentic costumes, classical architecture',
+  'contemporary': 'modern setting, contemporary lifestyle, realistic environment, current day',
+} as const;
+
 export class ImageGenerator {
   private apiKey: string;
   private baseUrl = 'https://api.openai.com/v1';
@@ -38,11 +63,36 @@ export class ImageGenerator {
     this.apiKey = apiKey;
   }
 
+  private buildStyledPrompt(basePrompt: string, artStyle?: string, genre?: string): string {
+    let enhancedPrompt = basePrompt;
+    
+    // Add art style modifier
+    if (artStyle && ART_STYLE_MODIFIERS[artStyle as keyof typeof ART_STYLE_MODIFIERS]) {
+      const styleModifier = ART_STYLE_MODIFIERS[artStyle as keyof typeof ART_STYLE_MODIFIERS];
+      enhancedPrompt += `, ${styleModifier}`;
+    }
+    
+    // Add genre modifier  
+    if (genre && GENRE_MODIFIERS[genre as keyof typeof GENRE_MODIFIERS]) {
+      const genreModifier = GENRE_MODIFIERS[genre as keyof typeof GENRE_MODIFIERS];
+      enhancedPrompt += `, ${genreModifier}`;
+    }
+    
+    // Add quality enhancers
+    enhancedPrompt += ', high quality, professional artwork, detailed composition';
+    
+    return enhancedPrompt;
+  }
+
   async generateImage(request: ImageGenerationRequest): Promise<GeneratedImage> {
     const model = request.model || 'dall-e-2';
+    
+    // Build styled prompt with art style and genre modifiers
+    const styledPrompt = this.buildStyledPrompt(request.prompt, request.artStyle, request.genre);
+    
     const requestBody: any = {
       model,
-      prompt: request.prompt,
+      prompt: styledPrompt,
       size: request.size || '512x512',
       n: 1,
       response_format: 'url',
@@ -159,10 +209,8 @@ export class ImageGenerator {
       prompt += `. Mood: ${mood}`;
     }
 
-    const enhancedPrompt = await this.enhancePrompt(prompt, 'cinematic');
-
     return this.generateImage({
-      prompt: enhancedPrompt,
+      prompt,
       model: 'dall-e-2',
       quality: 'standard',
       size: '512x512',
@@ -176,10 +224,9 @@ export class ImageGenerator {
     options: Partial<ImageGenerationRequest> = {}
   ): Promise<GeneratedImage> {
     const prompt = `Portrait of ${characterName}: ${description}`;
-    const enhancedPrompt = await this.enhancePrompt(prompt, 'artistic');
 
     return this.generateImage({
-      prompt: enhancedPrompt,
+      prompt,
       model: 'dall-e-2',
       quality: 'standard',
       size: '512x512',

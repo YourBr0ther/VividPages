@@ -523,3 +523,341 @@ Raw response: {
  GET /favicon.ico 200 in 31ms
  GET /api/models 200 in 510ms
  GET /api/models 200 in 354ms
+ ✓ Compiled in 582ms (1162 modules)
+ GET /workshop 200 in 122ms
+ ✓ Compiled in 161ms (1162 modules)
+ GET /workshop 200 in 55ms
+ ✓ Compiled in 137ms (1162 modules)
+ GET /workshop 200 in 55ms
+ ✓ Compiled in 139ms (1162 modules)
+ GET /workshop 200 in 35ms
+ ✓ Compiled in 253ms (1162 modules)
+ GET /workshop 200 in 58ms
+ ✓ Compiled in 149ms (1162 modules)
+ GET /workshop 200 in 31ms
+ ✓ Compiled in 142ms (1162 modules)
+ GET /workshop 200 in 38ms
+ ✓ Compiled in 160ms (1162 modules)
+ GET /workshop 200 in 56ms
+ ✓ Compiled in 139ms (1162 modules)
+ GET /workshop 200 in 36ms
+ ✓ Compiled in 172ms (1162 modules)
+ GET /workshop 200 in 41ms
+ ✓ Compiled in 283ms (1162 modules)
+ GET /workshop 200 in 38ms
+ GET /workshop 200 in 145ms
+ GET /workshop 200 in 41ms
+ ✓ Compiled /favicon.ico in 182ms (646 modules)
+ GET /favicon.ico 200 in 254ms
+ ✓ Compiled /api/models in 145ms (651 modules)
+ GET /api/models 200 in 793ms
+ GET /api/models 200 in 508ms
+ ✓ Compiled /api/characters in 93ms (654 modules)
+ POST /api/characters 200 in 19026ms
+ ✓ Compiled /api/scenes in 102ms (656 modules)
+Failed to parse scene extraction response: Error: Response does not contain valid scene data
+    at OllamaClient.extractScenes (src/lib/ollama-client.ts:248:16)
+    at async POST (src/app/api/scenes/route.ts:69:19)
+  246 |             }));
+  247 |         } else {
+> 248 |           throw new Error('Response does not contain valid scene data');
+      |                ^
+  249 |         }
+  250 |       } catch (parseError) {
+  251 |         console.error('Failed to parse scene extraction response:', parseError);
+Raw response: { "query": "Reia Salvias is going to be offered up as a sacrifice in the book A Soul to Keep: Duskwalker Brides. Please explain this situation."}
+
+
+
+
+ 
+
+
+
+  
+
+ 
+
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ POST /api/scenes 200 in 2206ms
+ ✓ Compiled in 311ms (1183 modules)
+ GET /workshop 200 in 71ms
+ ✓ Compiled in 145ms (1183 modules)
+ GET /workshop 200 in 49ms
+ ✓ Compiled in 73ms (533 modules)
+ GET /workshop 200 in 17ms
+ GET /workshop 200 in 165ms
+ ✓ Compiled /favicon.ico in 53ms (646 modules)
+ GET /favicon.ico 200 in 72ms
+ ✓ Compiled /api/models in 57ms (651 modules)
+ GET /api/models 200 in 537ms
+ GET /api/models 200 in 481ms
+ ✓ Compiled in 77ms (533 modules)
+ GET /workshop 200 in 53ms
+ GET /workshop 200 in 123ms
+ ✓ Compiled /api/characters in 93ms (654 modules)
+Failed to parse character extraction response: Error: Response does not contain valid character data
+    at OllamaClient.extractCharacters (src/lib/ollama-client.ts:138:16)
+    at async POST (src/app/api/characters/route.ts:32:23)
+  136 |             }));
+  137 |         } else {
+> 138 |           throw new Error('Response does not contain valid character data');
+      |                ^
+  139 |         }
+  140 |       } catch (parseError) {
+  141 |         console.error('Failed to parse character extraction response:', parseError);
+Raw response: {
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+					
+					
+					
+
+ 
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+ POST /api/characters 200 in 1760ms
+ GET /api/models 200 in 397ms
+ GET /api/models 200 in 352ms
+ POST /api/characters 200 in 15010ms
+   Reload env: .env
+ ✓ Compiled in 391ms (1148 modules)
+ ✓ Compiled in 104ms (533 modules)
+ ✓ Compiled in 78ms (533 modules)
+ ✓ Compiled in 74ms (533 modules)
+ ✓ Compiled in 67ms (533 modules)
+ ✓ Compiled in 312ms (1162 modules)
+ ✓ Compiled in 196ms (1162 modules)
+ ✓ Compiled in 147ms (1162 modules)
+ GET /workshop 200 in 243ms
+ ✓ Compiled in 181ms (533 modules)
+ ✓ Compiled in 92ms (533 modules)
+ ✓ Compiled / in 294ms (645 modules)
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.]
+ ⨯ [Error [InvariantError]: Invariant: Expected clientReferenceManifest to be defined. This is a bug in Next.js.] {
+  page: '/'
+}
+ ○ Compiling /_error ...
+ ✓ Compiled /_error in 967ms (1492 modules)
+ GET / 500 in 2288ms
+ ✓ Compiled in 636ms (680 modules)
+ ✓ Compiled in 122ms (680 modules)
+ ✓ Compiled in 1096ms (1403 modules)
+ ✓ Compiled in 212ms (1403 modules)
+ ✓ Compiled /api/generate-image in 192ms (1409 modules)
+ POST /api/generate-image 200 in 13663ms
+ ✓ Compiled in 438ms (680 modules)
+ ✓ Compiled in 113ms (680 modules)
+ ✓ Compiled in 101ms (680 modules)
+ ✓ Compiled in 100ms (680 modules)
+ ✓ Compiled in 94ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/5.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/5.pack.gz'
+ ✓ Compiled in 650ms (680 modules)
+ ✓ Compiled in 137ms (680 modules)
+ ✓ Compiled in 129ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz'
+ ✓ Compiled in 169ms (680 modules)
+ ✓ Compiled in 139ms (680 modules)
+ ✓ Compiled in 1075ms (1403 modules)
+ ✓ Compiled in 213ms (1403 modules)
+ ✓ Compiled in 213ms (1403 modules)
+ ✓ Compiled in 311ms (1403 modules)
+ ✓ Compiled in 136ms (680 modules)
+ ✓ Compiled in 147ms (680 modules)
+ ✓ Compiled in 112ms (680 modules)
+ ✓ Compiled in 97ms (680 modules)
+ ✓ Compiled in 98ms (680 modules)
+ ✓ Compiled in 90ms (680 modules)
+ ✓ Compiled in 91ms (680 modules)
+ ✓ Compiled in 106ms (680 modules)
+ ✓ Compiled in 84ms (680 modules)
+ ✓ Compiled in 97ms (680 modules)
+ ✓ Compiled in 86ms (680 modules)
+ ✓ Compiled in 89ms (680 modules)
+ ✓ Compiled in 87ms (680 modules)
+ ✓ Compiled in 92ms (680 modules)
+ ✓ Compiled in 364ms (1403 modules)
+ ✓ Compiled in 280ms (1403 modules)
+ ✓ Compiled in 282ms (1403 modules)
+ ✓ Compiled in 223ms (680 modules)
+ ✓ Compiled in 118ms (680 modules)
+ ✓ Compiled in 107ms (680 modules)
+ ✓ Compiled in 289ms (1403 modules)
+ ✓ Compiled in 261ms (680 modules)
+ ✓ Compiled in 98ms (680 modules)
+ ✓ Compiled in 94ms (680 modules)
+ ✓ Compiled in 85ms (680 modules)
+ ✓ Compiled in 96ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/2.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/2.pack.gz'
+ ✓ Compiled in 205ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz'
+ ✓ Compiled in 267ms (680 modules)
+ ✓ Compiled in 130ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz'
+ ✓ Compiled in 235ms (680 modules)
+ ✓ Compiled in 139ms (680 modules)
+ ✓ Compiled in 108ms (680 modules)
+ ✓ Compiled in 144ms (680 modules)
+ ✓ Compiled in 635ms (680 modules)
+ ✓ Compiled in 114ms (680 modules)
+ ✓ Compiled in 146ms (680 modules)
+ ✓ Compiled in 107ms (680 modules)
+ ✓ Compiled in 103ms (680 modules)
+ ✓ Compiled in 90ms (680 modules)
+ ✓ Compiled in 99ms (680 modules)
+ ✓ Compiled in 96ms (680 modules)
+ ✓ Compiled in 326ms (680 modules)
+ ✓ Compiled in 112ms (680 modules)
+ ✓ Compiled in 110ms (680 modules)
+ ✓ Compiled in 109ms (680 modules)
+ ✓ Compiled in 177ms (680 modules)
+ ✓ Compiled in 177ms (680 modules)
+ ✓ Compiled in 105ms (680 modules)
+ ✓ Compiled in 97ms (680 modules)
+ ✓ Compiled in 1361ms (1403 modules)
+ ✓ Compiled in 324ms (1403 modules)
+ ✓ Compiled in 201ms (1403 modules)
+ ✓ Compiled in 157ms (680 modules)
+ ✓ Compiled in 118ms (680 modules)
+ ✓ Compiled in 112ms (680 modules)
+ ✓ Compiled in 108ms (680 modules)
+ ✓ Compiled in 102ms (680 modules)
+ ✓ Compiled in 103ms (680 modules)
+ ✓ Compiled in 96ms (680 modules)
+ ✓ Compiled in 319ms (1403 modules)
+ ✓ Compiled in 125ms (680 modules)
+ ✓ Compiled in 105ms (680 modules)
+ ✓ Compiled in 92ms (680 modules)
+ ✓ Compiled in 101ms (680 modules)
+ ✓ Compiled in 156ms (680 modules)
+ ✓ Compiled in 92ms (680 modules)
+ ✓ Compiled in 88ms (680 modules)
+ ✓ Compiled in 94ms (680 modules)
+ ✓ Compiled in 84ms (680 modules)
+ ✓ Compiled in 90ms (680 modules)
+ ✓ Compiled in 97ms (680 modules)
+ ✓ Compiled in 134ms (680 modules)
+ ✓ Compiled in 168ms (680 modules)
+ ✓ Compiled in 96ms (680 modules)
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: ENOENT: no such file or directory, rename '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz_' -> '/Users/christophervance/VividPages/.next/cache/webpack/client-development/0.pack.gz'

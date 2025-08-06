@@ -10,7 +10,9 @@ export async function POST(request: NextRequest) {
       quality = 'standard', 
       size = '512x512',
       style = 'vivid',
-      type = 'scene'
+      type = 'scene',
+      artStyle,
+      genre
     } = body;
 
     if (!prompt) {
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
       result = await imageGenerator.generateCharacterPortrait(
         characterName,
         description,
-        { model, quality, size }
+        { model, quality, size, artStyle, genre }
       );
     } else if (type === 'scene') {
       const { sceneDescription, characters = [], setting = '', mood = '' } = body;
@@ -63,7 +65,7 @@ export async function POST(request: NextRequest) {
         characters,
         setting,
         mood,
-        { model, quality, size, style }
+        { model, quality, size, style, artStyle, genre }
       );
     } else {
       // Generic image generation
@@ -73,6 +75,8 @@ export async function POST(request: NextRequest) {
         quality,
         size,
         style,
+        artStyle,
+        genre,
       });
     }
 
@@ -104,7 +108,7 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      if (error.message.includes('content policy')) {
+      if (error.message.includes('content policy') || error.message.includes('safety system')) {
         return NextResponse.json(
           { 
             error: 'Content not allowed',

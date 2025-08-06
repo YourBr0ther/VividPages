@@ -83,6 +83,12 @@ export default function WorkshopPage() {
   const handleStartProcessing = useCallback(async () => {
     if (!project) return;
 
+    // Validate that style options are selected
+    if (!project.configuration.artStyle || !project.configuration.genre) {
+      setError('Please select both an art style and genre before processing.');
+      return;
+    }
+
     setCurrentStep('processing');
     setProcessing(true);
     setError(null);
@@ -99,6 +105,9 @@ export default function WorkshopPage() {
             .map(ch => ch.content).join('\n\n'),
           model: project.configuration.llmModel,
           generateImages: true,
+          artStyle: project.configuration.artStyle,
+          genre: project.configuration.genre,
+          aiProvider: project.configuration.aiProvider,
         }),
       });
 
@@ -143,6 +152,8 @@ export default function WorkshopPage() {
           model: project?.configuration.imageModel || 'dall-e-2',
           quality: project?.configuration.imageQuality || 'standard',
           size: '512x512',
+          artStyle: project?.configuration.artStyle,
+          genre: project?.configuration.genre,
         }),
       });
 
@@ -198,6 +209,9 @@ export default function WorkshopPage() {
           imageModel: project.configuration.imageModel,
           imageQuality: project.configuration.imageQuality,
           generateImages: true,
+          artStyle: project.configuration.artStyle,
+          genre: project.configuration.genre,
+          aiProvider: project.configuration.aiProvider,
         }),
       });
 

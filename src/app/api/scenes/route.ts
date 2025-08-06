@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OllamaClient } from '@/lib/ollama-client';
+import { OpenAIClient } from '@/lib/openai-client';
 import { ImageGenerator } from '@/lib/image-generator';
 
 interface Character {
@@ -41,8 +42,13 @@ export async function POST(request: NextRequest) {
       llmModel, 
       imageModel,
       imageQuality = 'standard',
-      generateImages = true 
+      generateImages = true,
+      artStyle,
+      genre,
+      aiProvider = 'ollama'
     } = body;
+    
+    console.log(`🎬 Scene extraction request: provider=${aiProvider}, model=${llmModel}`);
 
     if (!bookText) {
       return NextResponse.json(
@@ -51,27 +57,64 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-    const defaultModel = process.env.OLLAMA_DEFAULT_MODEL || 'llama2';
-    
-    const ollama = new OllamaClient(ollamaHost, defaultModel);
+    let scenes;
 
-    // Check if Ollama is available
-    const isAvailable = await ollama.isAvailable();
-    if (!isAvailable) {
-      return NextResponse.json(
-        { error: 'Ollama service is not available. Please ensure Ollama is running.' },
-        { status: 503 }
+    if (aiProvider === 'openai') {
+      // Use OpenAI for scene extraction
+      const openaiApiKey = process.env.OPENAI_API_KEY;
+      if (!openaiApiKey) {
+        return NextResponse.json(
+          { error: 'OpenAI API key is not configured' },
+          { status: 500 }
+        );
+      }
+
+      // When using OpenAI, ignore Ollama model names and use appropriate OpenAI models
+      const openaiModel = 'gpt-3.5-turbo'; // Always use a reliable OpenAI model
+      console.log(`🔧 Creating OpenAI client for scenes with model: ${openaiModel} (ignoring provided model: ${llmModel})`);
+      const openaiClient = new OpenAIClient(openaiApiKey, openaiModel);
+      
+      // Check if OpenAI is available
+      console.log('🔍 Checking OpenAI availability...');
+      const isAvailable = await openaiClient.isAvailable();
+      if (!isAvailable) {
+        return NextResponse.json(
+          { error: 'OpenAI service is not available. Please check your API key.' },
+          { status: 503 }
+        );
+      }
+
+      // Extract scenes using OpenAI
+      scenes = await openaiClient.extractScenes(
+        bookText, 
+        characters, 
+        scenesPerChapter, 
+        openaiModel
+      );
+    } else {
+      // Use Ollama for scene extraction
+      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
+      const defaultModel = process.env.OLLAMA_DEFAULT_MODEL || 'llama2';
+      
+      const ollama = new OllamaClient(ollamaHost, defaultModel);
+
+      // Check if Ollama is available
+      const isAvailable = await ollama.isAvailable();
+      if (!isAvailable) {
+        return NextResponse.json(
+          { error: 'Ollama service is not available. Please ensure Ollama is running.' },
+          { status: 503 }
+        );
+      }
+
+      // Extract scenes using Ollama
+      scenes = await ollama.extractScenes(
+        bookText, 
+        characters, 
+        scenesPerChapter, 
+        llmModel
       );
     }
-
-    // Extract scenes using Ollama
-    const scenes = await ollama.extractScenes(
-      bookText, 
-      characters, 
-      scenesPerChapter, 
-      llmModel
-    );
 
     let scenesWithImages = scenes;
 
@@ -96,15 +139,17 @@ export async function POST(request: NextRequest) {
               }));
 
               // Generate scene image with character context
-              const image = await imageGenerator.generateSceneWithCharacterPortraits(
+              const image = await imageGenerator.generateSceneImage(
                 scene.description,
+                sceneCharacters.map(char => char.name),
                 scene.setting,
                 scene.mood,
-                sceneCharacters,
                 { 
                   model: imageModel || 'dall-e-3',
                   quality: imageQuality as 'standard' | 'hd',
-                  size: '1024x1024' 
+                  size: '1024x1024',
+                  artStyle,
+                  genre
                 }
               );
               

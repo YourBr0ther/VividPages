@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OllamaClient } from '@/lib/ollama-client';
+import { OpenAIClient } from '@/lib/openai-client';
 import { ImageGenerator } from '@/lib/image-generator';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { bookText, model, generateImages } = body;
+    const { bookText, model, generateImages, artStyle, genre, aiProvider = 'ollama' } = body;
+    
+    console.log(`🎯 Character extraction request: provider=${aiProvider}, model=${model}`);
 
     if (!bookText) {
       return NextResponse.json(
@@ -14,22 +17,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
-    const defaultModel = process.env.OLLAMA_DEFAULT_MODEL || 'llama2';
-    
-    const ollama = new OllamaClient(ollamaHost, defaultModel);
+    let characters;
 
-    // Check if Ollama is available
-    const isAvailable = await ollama.isAvailable();
-    if (!isAvailable) {
-      return NextResponse.json(
-        { error: 'Ollama service is not available. Please ensure Ollama is running.' },
-        { status: 503 }
-      );
+    if (aiProvider === 'openai') {
+      // Use OpenAI for character extraction
+      const openaiApiKey = process.env.OPENAI_API_KEY;
+      if (!openaiApiKey) {
+        return NextResponse.json(
+          { error: 'OpenAI API key is not configured' },
+          { status: 500 }
+        );
+      }
+
+      // When using OpenAI, ignore Ollama model names and use appropriate OpenAI models
+      const openaiModel = 'gpt-3.5-turbo'; // Always use a reliable OpenAI model
+      console.log(`🔧 Creating OpenAI client with model: ${openaiModel} (ignoring provided model: ${model})`);
+      const openaiClient = new OpenAIClient(openaiApiKey, openaiModel);
+      
+      // Check if OpenAI is available
+      console.log('🔍 Checking OpenAI availability...');
+      const isAvailable = await openaiClient.isAvailable();
+      if (!isAvailable) {
+        return NextResponse.json(
+          { error: 'OpenAI service is not available. Please check your API key.' },
+          { status: 503 }
+        );
+      }
+
+      // Extract characters using OpenAI
+      characters = await openaiClient.extractCharacters(bookText, 10, 0.7, openaiModel);
+    } else {
+      // Use Ollama for character extraction
+      const ollamaHost = process.env.OLLAMA_HOST || 'http://localhost:11434';
+      const defaultModel = process.env.OLLAMA_DEFAULT_MODEL || 'llama2';
+      
+      const ollama = new OllamaClient(ollamaHost, defaultModel);
+
+      // Check if Ollama is available
+      const isAvailable = await ollama.isAvailable();
+      if (!isAvailable) {
+        return NextResponse.json(
+          { error: 'Ollama service is not available. Please ensure Ollama is running.' },
+          { status: 503 }
+        );
+      }
+
+      // Extract characters using Ollama
+      characters = await ollama.extractCharacters(bookText, model);
     }
-
-    // Extract characters using Ollama
-    const characters = await ollama.extractCharacters(bookText, model);
 
     let charactersWithImages = characters;
 
@@ -47,7 +82,7 @@ export async function POST(request: NextRequest) {
               const image = await imageGenerator.generateCharacterPortrait(
                 character.name,
                 character.description,
-                { quality: 'standard', size: '512x512' }
+                { quality: 'standard', size: '512x512', artStyle, genre }
               );
               
               return {

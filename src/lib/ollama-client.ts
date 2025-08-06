@@ -70,17 +70,16 @@ export class OllamaClient {
       console.log(`📊 Book text length: ${bookText.length} characters`);
       console.log(`🔍 Processing first ${Math.min(8000, bookText.length)} characters...`);
       
-      const prompt = `I need you to extract ALL the main characters from this book text. Please list multiple characters, not just one.
+      const prompt = `Extract the MAIN character from this book text and return as JSON:
 
-Find the main characters and return them as a JSON array with multiple entries:
+{
+  "name": "Character Name",
+  "description": "Physical appearance and personality details",
+  "importance": 0.9,
+  "imagePrompt": "Detailed visual description for AI art generation"
+}
 
-[
-{"name": "Character1", "description": "description here", "importance": 0.9, "imagePrompt": "visual description"},
-{"name": "Character2", "description": "description here", "importance": 0.8, "imagePrompt": "visual description"},
-{"name": "Character3", "description": "description here", "importance": 0.7, "imagePrompt": "visual description"}
-]
-
-You must return an array with square brackets [ ] containing multiple character objects. Do not return just one character.
+Return only valid JSON object. Find the most important character first.
 
 BOOK TEXT:
 ${bookText.slice(0, 8000)}`;
@@ -186,24 +185,65 @@ ${bookText.slice(0, 8000)}`;
             console.log(`      📝 ${char.description.slice(0, 100)}${char.description.length > 100 ? '...' : ''}`);
           });
           
-          // If we only got 1 character, try to extract more by asking for "other characters"
-          if (validCharacters.length === 1) {
-            console.log(`🔄 Only found 1 character, attempting to find additional characters...`);
+          // Always try to extract more characters with multiple requests
+          console.log(`🔄 Found ${validCharacters.length} character(s), attempting to find additional characters...`);
+          
+          const allCharacters = [...validCharacters];
+          const usedNames = new Set(validCharacters.map(c => c.name.toLowerCase()));
+          
+          // Make multiple requests to get more characters
+          for (let i = 2; i <= 4; i++) { // Try to get 2-4 more characters
             try {
-              const additionalCharacters = await this.extractAdditionalCharacters(bookText, validCharacters[0].name, modelToUse);
-              if (additionalCharacters.length > 0) {
-                console.log(`🎭 Found ${additionalCharacters.length} additional characters`);
-                validCharacters.push(...additionalCharacters);
+              const excludeList = Array.from(usedNames).join(', ');
+              const additionalCharacter = await this.extractSingleCharacter(
+                bookText, 
+                excludeList, 
+                modelToUse, 
+                i
+              );
+              
+              if (additionalCharacter && !usedNames.has(additionalCharacter.name.toLowerCase())) {
+                allCharacters.push(additionalCharacter);
+                usedNames.add(additionalCharacter.name.toLowerCase());
+                console.log(`🎭 Found additional character: ${additionalCharacter.name}`);
+              } else {
+                console.log(`⚠️ No new character found in attempt ${i}`);
+                break; // Stop if we don't find anything new
               }
             } catch (error) {
-              console.warn(`⚠️ Failed to extract additional characters:`, error);
+              console.warn(`⚠️ Failed to extract character ${i}:`, error);
             }
           }
           
-          return validCharacters;
+          console.log(`✨ Total characters found: ${allCharacters.length}`);
+          return allCharacters;
         } else {
-          console.warn(`⚠️ No valid character data found in response. Type: ${typeof characters}, IsArray: ${Array.isArray(characters)}, Length: ${Array.isArray(characters) ? characters.length : 'N/A'}`);
-          return [];
+          console.warn(`⚠️ No valid character data found in main response. Type: ${typeof characters}, IsArray: ${Array.isArray(characters)}, Length: ${Array.isArray(characters) ? characters.length : 'N/A'}`);
+          
+          // Fallback: Try to extract characters with different approach
+          console.log(`🔄 Attempting fallback character extraction...`);
+          const fallbackCharacters = [];
+          
+          for (let i = 1; i <= 3; i++) {
+            try {
+              const fallbackCharacter = await this.extractSingleCharacter(
+                bookText, 
+                fallbackCharacters.map(c => c.name).join(', '), 
+                modelToUse, 
+                i
+              );
+              
+              if (fallbackCharacter) {
+                fallbackCharacters.push(fallbackCharacter);
+                console.log(`🎭 Fallback found character: ${fallbackCharacter.name}`);
+              }
+            } catch (error) {
+              console.warn(`⚠️ Fallback extraction ${i} failed:`, error);
+            }
+          }
+          
+          console.log(`✨ Fallback total characters found: ${fallbackCharacters.length}`);
+          return fallbackCharacters;
         }
       } catch (parseError) {
         console.error('❌ Failed to parse character extraction response:', parseError);
@@ -245,20 +285,28 @@ ${bookText.slice(0, 8000)}`;
     }
   }
 
-  async extractAdditionalCharacters(bookText: string, excludeName: string, model?: string): Promise<Character[]> {
+  async extractSingleCharacter(bookText: string, excludeNames: string, model?: string, attemptNumber: number = 2): Promise<Character | null> {
     try {
       const modelToUse = model || this.defaultModel;
       
-      const prompt = `The main character "${excludeName}" has already been found. Now find OTHER main characters from this book text (not ${excludeName}).
+      const characterRoles = [
+        'secondary character', 'supporting character', 'important character', 
+        'side character', 'companion character', 'antagonist', 'love interest'
+      ];
+      const role = characterRoles[(attemptNumber - 2) % characterRoles.length];
+      
+      const prompt = `Find a ${role} from this book text. Do NOT include these already found characters: ${excludeNames}
 
-Return them as a JSON array:
+Extract ONE different character and return as JSON:
 
-[
-{"name": "Character2", "description": "different character description", "importance": 0.8, "imagePrompt": "visual description"},
-{"name": "Character3", "description": "another character description", "importance": 0.7, "imagePrompt": "visual description"}
-]
+{
+  "name": "Character Name",
+  "description": "Physical appearance and personality details",
+  "importance": 0.7,
+  "imagePrompt": "Detailed visual description for AI art generation"
+}
 
-Find secondary characters, supporting characters, or other important people mentioned in the text. Do not include ${excludeName}.
+Return only valid JSON object for a DIFFERENT character than those already listed.
 
 BOOK TEXT:
 ${bookText.slice(0, 8000)}`;
@@ -284,30 +332,29 @@ ${bookText.slice(0, 8000)}`;
       let rawResponse = data.response || '';
       
       if (!rawResponse.trim() || rawResponse.trim() === '{}') {
-        return [];
+        return null;
       }
 
-      // Extract JSON array
-      const arrayMatch = rawResponse.match(/\[[\s\S]*\]/);
-      if (arrayMatch) {
-        const jsonStr = arrayMatch[0];
+      // Extract JSON object
+      const objectMatch = rawResponse.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        const jsonStr = objectMatch[0];
         const parsedResponse = JSON.parse(jsonStr);
         
-        if (Array.isArray(parsedResponse)) {
-          return parsedResponse
-            .filter(char => char && char.name && char.name !== excludeName)
-            .map(char => ({
-              name: String(char.name).trim(),
-              description: String(char.description).trim(),
-              importance: Math.min(Math.max(Number(char.importance) || 0.5, 0.0), 1.0),
-              imagePrompt: String(char.imagePrompt || char.description).trim()
-            }));
+        if (parsedResponse && parsedResponse.name && parsedResponse.description) {
+          return {
+            name: String(parsedResponse.name).trim(),
+            description: String(parsedResponse.description).trim(),
+            importance: Math.min(Math.max(Number(parsedResponse.importance) || 0.5, 0.0), 1.0),
+            imagePrompt: String(parsedResponse.imagePrompt || parsedResponse.description).trim()
+          };
         }
       }
       
-      return [];
+      return null;
     } catch (error) {
-      throw error;
+      console.warn(`Failed to extract single character:`, error);
+      return null;
     }
   }
 
@@ -318,6 +365,7 @@ ${bookText.slice(0, 8000)}`;
     model?: string
   ): Promise<Scene[]> {
     try {
+      const startTime = Date.now();
       const modelToUse = model || this.defaultModel;
       
       console.log(`🎬 Starting scene extraction with Ollama...`);

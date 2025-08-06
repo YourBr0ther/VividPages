@@ -9,6 +9,9 @@ export interface Configuration {
   imageModel: string;
   imageQuality: 'standard' | 'hd';
   characterSensitivity: number;
+  artStyle: string;
+  genre: string;
+  aiProvider: 'ollama' | 'openai';
 }
 
 interface ModelStatus {
@@ -32,6 +35,30 @@ interface ConfigurationPanelProps {
 
 const STORAGE_KEY = 'vividpages-config';
 
+// Art style options with descriptive names and modifiers
+export const ART_STYLES = [
+  { value: 'digital-art', label: 'Digital Art', description: 'Modern digital illustration style' },
+  { value: 'oil-painting', label: 'Oil Painting', description: 'Classic painted artwork with rich textures' },
+  { value: 'watercolor', label: 'Watercolor', description: 'Soft, flowing watercolor technique' },
+  { value: 'pencil-sketch', label: 'Pencil Sketch', description: 'Detailed pencil and charcoal artwork' },
+  { value: 'anime-manga', label: 'Anime/Manga', description: 'Japanese animation and comic style' },
+  { value: 'photorealistic', label: 'Photorealistic', description: 'Highly detailed, photo-like quality' },
+  { value: 'impressionist', label: 'Impressionist', description: 'Soft brushstrokes and light effects' },
+  { value: 'art-nouveau', label: 'Art Nouveau', description: 'Decorative art with flowing lines' },
+] as const;
+
+// Genre options that influence mood and atmosphere
+export const GENRES = [
+  { value: 'fantasy', label: 'Fantasy', description: 'Magical worlds with mythical creatures' },
+  { value: 'sci-fi', label: 'Science Fiction', description: 'Futuristic technology and space themes' },
+  { value: 'horror', label: 'Horror', description: 'Dark, mysterious, and frightening atmosphere' },
+  { value: 'mystery', label: 'Mystery', description: 'Noir atmosphere with detective elements' },
+  { value: 'romance', label: 'Romance', description: 'Warm, intimate, and emotional scenes' },
+  { value: 'adventure', label: 'Adventure', description: 'Action-packed and heroic themes' },
+  { value: 'historical', label: 'Historical', description: 'Period-accurate settings and costumes' },
+  { value: 'contemporary', label: 'Contemporary', description: 'Modern-day realistic settings' },
+] as const;
+
 const DEFAULT_CONFIG: Configuration = {
   selectedChapters: 1,
   scenesPerChapter: 1,
@@ -39,6 +66,9 @@ const DEFAULT_CONFIG: Configuration = {
   imageModel: 'dall-e-2',
   imageQuality: 'standard',
   characterSensitivity: 0.7,
+  artStyle: 'digital-art',
+  genre: 'fantasy',
+  aiProvider: 'ollama',
 };
 
 // Load saved configuration from localStorage
@@ -66,6 +96,8 @@ const saveConfig = (config: Configuration) => {
       imageQuality: config.imageQuality,
       characterSensitivity: config.characterSensitivity,
       scenesPerChapter: config.scenesPerChapter,
+      artStyle: config.artStyle,
+      genre: config.genre,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(configToSave));
   } catch (error) {
@@ -281,6 +313,151 @@ export default function ConfigurationPanel({
           <p className="text-xs text-text-muted mt-1">
             More scenes = more detailed visual story but longer processing time
           </p>
+        </div>
+
+        {/* AI Provider Selection */}
+        <div className="pt-4 border-t border-primary-gold/20">
+          <h3 className="text-lg font-semibold text-primary-gold mb-4">
+            AI Provider Settings
+          </h3>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-text-light mb-3">
+              AI Provider for Character & Scene Extraction <span className="text-red-400">*</span>
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div
+                onClick={() => updateConfig({ aiProvider: 'ollama' })}
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  config.aiProvider === 'ollama'
+                    ? 'border-primary-gold bg-primary-gold/10 text-text-light'
+                    : 'border-primary-gold/30 bg-primary-navy/20 text-text-muted hover:border-primary-gold/60 hover:bg-primary-navy/30'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">Ollama (Local)</span>
+                  {config.aiProvider === 'ollama' && (
+                    <span className="text-primary-gold">✓</span>
+                  )}
+                </div>
+                <p className="text-xs opacity-80">Run AI models locally on your machine. Private and free.</p>
+                <div className="mt-2">
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    modelStatus?.ollama.available 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {modelStatus?.ollama.available ? 'Available' : 'Not Available'}
+                  </span>
+                </div>
+              </div>
+              
+              <div
+                onClick={() => updateConfig({ aiProvider: 'openai' })}
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  config.aiProvider === 'openai'
+                    ? 'border-primary-gold bg-primary-gold/10 text-text-light'
+                    : 'border-primary-gold/30 bg-primary-navy/20 text-text-muted hover:border-primary-gold/60 hover:bg-primary-navy/30'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-medium">OpenAI (ChatGPT)</span>
+                  {config.aiProvider === 'openai' && (
+                    <span className="text-primary-gold">✓</span>
+                  )}
+                </div>
+                <p className="text-xs opacity-80">Use OpenAI's ChatGPT models. Higher quality results.</p>
+                <div className="mt-2">
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    modelStatus?.openai.available 
+                      ? 'bg-green-500/20 text-green-400' 
+                      : 'bg-red-500/20 text-red-400'
+                  }`}>
+                    {modelStatus?.openai.available ? 'Available' : 'Not Available'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Style Configuration - Required Settings */}
+        <div className="pt-4 border-t border-primary-gold/20">
+          <h3 className="text-lg font-semibold text-primary-gold mb-4">
+            Visual Style Settings
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Art Style */}
+            <div>
+              <label className="block text-sm font-medium text-text-light mb-3">
+                Art Style <span className="text-red-400">*</span>
+              </label>
+              <div className="space-y-2">
+                {ART_STYLES.map((style) => (
+                  <div
+                    key={style.value}
+                    onClick={() => updateConfig({ artStyle: style.value })}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      config.artStyle === style.value
+                        ? 'border-primary-gold bg-primary-gold/10 text-text-light'
+                        : 'border-primary-gold/30 bg-primary-navy/20 text-text-muted hover:border-primary-gold/60 hover:bg-primary-navy/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{style.label}</span>
+                      {config.artStyle === style.value && (
+                        <span className="text-primary-gold">✓</span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-1 opacity-80">{style.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Genre */}
+            <div>
+              <label className="block text-sm font-medium text-text-light mb-3">
+                Genre <span className="text-red-400">*</span>
+              </label>
+              <div className="space-y-2">
+                {GENRES.map((genre) => (
+                  <div
+                    key={genre.value}
+                    onClick={() => updateConfig({ genre: genre.value })}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      config.genre === genre.value
+                        ? 'border-primary-gold bg-primary-gold/10 text-text-light'
+                        : 'border-primary-gold/30 bg-primary-navy/20 text-text-muted hover:border-primary-gold/60 hover:bg-primary-navy/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{genre.label}</span>
+                      {config.genre === genre.value && (
+                        <span className="text-primary-gold">✓</span>
+                      )}
+                    </div>
+                    <p className="text-xs mt-1 opacity-80">{genre.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-primary-gold/10 border border-primary-gold/30 rounded-lg p-3">
+            <div className="flex items-start space-x-2">
+              <span className="text-primary-gold text-sm">✨</span>
+              <div>
+                <p className="text-sm text-text-light font-medium">
+                  Current Style: {ART_STYLES.find(s => s.value === config.artStyle)?.label} + {GENRES.find(g => g.value === config.genre)?.label}
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  This combination will influence all generated character portraits and scene images
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
